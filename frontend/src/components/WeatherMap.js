@@ -3,8 +3,13 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FloridaCountiesData } from '../data/FloridaCountiesData';
 import {floridaData} from '../data/floridaData'
+import { AlachuaData } from '../data/AlachuaData';
 import { style, highlightFeature, resetHighlight } from '../helpers/mapHelpers'; // Import helper functions
+// import { IdwLayer } from '../leaflet-idw-directdraw';
+import * as turf from '@turf/turf';
+import IdwLayer from './IdwLayer';
 
+// import '../leaflet-idw'
 
 
 
@@ -14,9 +19,49 @@ const WeatherMap = () => {
     // let map = null;
     const [currentMetric, setCurrentMetric] = useState('avg_temp');
 
+    const minLat = 24.396308;
+    const maxLat = 30.987679;
+    const minLon = -87.634643;
+    const maxLon = -80.031362;
+    const stepSize = 0.05;  // Adjust step size to get desired resolution
+
+    const floridaPolygon = turf.polygon(floridaData.geometry.coordinates);
+    // const floridaPolygon = turf.polygon(AlachuaData.geometry.coordinates);
+
+    let rectangles = [];
+   
+
+    let centers = []
+    
+    for(let lat = minLat; lat <= maxLat; lat += stepSize) {
+        for(let lon = minLon; lon <= maxLon; lon += stepSize) {
+            let centerPoint = turf.point([lon, lat]);
+            if (turf.booleanPointInPolygon(centerPoint, floridaPolygon)) {
+                let boundingBox = [
+                    lon - stepSize / 2,
+                    lat - stepSize / 2,
+                    lon + stepSize / 2,
+                    lat + stepSize / 2
+                ];
+                let rectangle = turf.bboxPolygon(boundingBox);
+                rectangles.push(rectangle);
+
+                let center = turf.center(rectangle);
+                centers.push(center)
+            
+            }
+        }
+    }
+
+   
+    console.log(rectangles[0])
+
+    rectangles[0].properties.avg_temp = 31
+    rectangles[1].properties.avg_temp = 31
+
+
     
 
-     
 
 
     const grades = [-20, -10, 10, 15, 20, 25, 30];
@@ -71,7 +116,9 @@ const WeatherMap = () => {
 
     const style = (feature) => {
         return {
-        fillColor: getColor(feature.properties[currentMetric]),
+        // fillColor: getColor(feature.properties[currentMetric]),
+        fillColor: 'red',
+        // weight: 0,
         weight: 2,
         opacity: 1,
         color: 'white',
@@ -79,6 +126,17 @@ const WeatherMap = () => {
         fillOpacity: 0.7
         };
     };
+
+    // const style = (feature) => {
+    //     return {
+    //     fillColor: 'red',
+    //     weight: 2,
+    //     opacity: 1,
+    //     color: 'red',
+    //     dashArray: '3',
+    //     fillOpacity: 0.7
+    //     };
+    // };
 
 
     const highlightFeature = (e) => {
@@ -132,10 +190,14 @@ const WeatherMap = () => {
 
 
   useEffect(() => {
+
+
    
 
     // Initialize the map
     let map = null;
+
+    
     
     
     let geoJsonLayer = null;
@@ -205,47 +267,51 @@ const WeatherMap = () => {
 
       info.addTo(map);
 
-      floridaLayer = L.geoJSON(floridaData, {
-        style: style
-      }).addTo(map); // Add the Florida state boundary to the map
+    //   floridaLayer = L.geoJSON(floridaData, {
+    //     style: style
+    //   }).addTo(map); // Add the Florida state boundary to the map
 
 
-      //Add GeoJSON layer
-      geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+     //Add GeoJSON layer
+    //   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+    //     style: style,
+    //     onEachFeature: onEachFeature,
+    // }).bindPopup(function (layer) {
+    //   return `${layer.feature.properties.avg_temp}°C`;
+    //     //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
+    //   }).addTo(map);
+
+    //    geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+    //     style: style,
+    // }).bindPopup(function (layer) {
+    //   return `${layer.feature.properties.avg_temp}°C`;
+    //     //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
+    //   }).addTo(map);
+
+      geoJsonLayer = L.geoJSON(turf.featureCollection(rectangles), {
         style: style,
-        onEachFeature: onEachFeature,
     }).bindPopup(function (layer) {
       return `${layer.feature.properties.avg_temp}°C`;
         //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
       }).addTo(map);
 
-    //   const cities = [
-    //     { name: "Miami", coordinates: [25.7617, -80.1918] },
-    //     { name: "Orlando", coordinates: [28.5383, -81.3792] },
-    //     { name: "Tampa", coordinates: [27.9944024, -82.582] },
-    //     // ... add more cities
-    //   ];
-
-    //   // let marker = L.marker([25.7617, -80.1918]).addTo(map);
-
-    //   var circle = L.circle([28.5383, -81.3792], {
-    //     color: '#0033CC',
-    //     fillColor: '#0033CC',
-    //     fillOpacity: 0.5,
-    //     radius: 25000
-    // }).addTo(map);
-
-      
+    //   let borderCoords = AlachuaData.geometry.coordinates.map(ring => 
+    //     ring.map(coord => [coord[1], coord[0]])
+    // );
     
-      // Add each city to the layer group
-      // cities.forEach((city) => {
-      //   const marker = L.marker(city.coordinates)
-      //     .bindPopup(city.name)
-      //     .openPopup();
-      //   cityLayer.addLayer(marker);
-      // });
+    // // Create a Leaflet polygon for the border
+    // let borderPolygon = L.polygon(borderCoords).addTo(map);
     
-      // Add the city layer to t
+    // // Style the border if desired
+    // borderPolygon.setStyle({
+    //     color: 'blue',
+    //     weight: 3,
+    //     opacity: 0.5,
+    //     fillOpacity: 0.0 // No fill
+    // });
+
+
+
 
     }
 
@@ -288,7 +354,7 @@ const WeatherMap = () => {
         }
       });
   
-      map.addControl(new customControl());
+     map.addControl(new customControl());
   
       // Expose function to window object so it can be accessed by inline onclick handlers
       window.switchMetric = (newMetric) => {
@@ -313,7 +379,7 @@ const WeatherMap = () => {
 
   return (
     <div id="map" style={{ height: '100%', width: '100%' }}>
-
+        {/* <IdwLayer latlngs={latlngs} options={options} /> */}
     </div>
   );
 }
