@@ -1,4 +1,4 @@
-import {floridaData} from '../data/floridaData'
+import {floridaData} from './floridaData'
 import * as turf from '@turf/turf';
 
 

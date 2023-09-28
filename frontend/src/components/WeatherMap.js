@@ -159,12 +159,7 @@ const WeatherMap = () => {
     const highlightFeature = (e) => {
         const layer = e.target;
     
-        // layer.setStyle({
-        // weight: 2,
-        // color: '#666',
-        // dashArray: '',
-        // fillOpacity: 0.7
-        // });
+
 
         layer.setStyle({
         weight: 3,
@@ -235,8 +230,7 @@ const WeatherMap = () => {
     
     
     let geoJsonLayer = null;
-    let floridaLayer = null;
-    let cityLayer = null;
+  
     
     const mapContainer = document.getElementById('map');
     
@@ -306,33 +300,12 @@ const WeatherMap = () => {
 
       info.addTo(map);
 
-    //   floridaLayer = L.geoJSON(floridaData, {
-    //     style: style
-    //   }).addTo(map); // Add the Florida state boundary to the map
 
-
-     //Add GeoJSON layer
-    //   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-    //     style: countyStyle,
-    //     onEachFeature: onEachFeature,
-    // }).bindPopup(function (layer) {
-    //   return `${layer.feature.properties.avg_temp}°C`;
-    //     //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
-    //   }).addTo(map);
-
-    //    geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-    //     style: style,
-    // }).bindPopup(function (layer) {
-    //   return `${layer.feature.properties.avg_temp}°C`;
-    //     //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
-    //   }).addTo(map);
-    
 
       geoJsonLayer = L.geoJSON(turf.featureCollection(grids), {
         style: style,
     }).bindPopup(function (layer) {
       return `${layer.feature.properties.avg_temp}°C`;
-        //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
       }).addTo(map);
 
       geoJsonLayer = L.geoJSON(FloridaCountiesData, {
@@ -340,15 +313,8 @@ const WeatherMap = () => {
         onEachFeature: onEachFeature,
     }).bindPopup(function (layer) {
       return `${layer.feature.properties[currentMetric]}°C`;
-        //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
       }).addTo(map);
 
-    // geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-    //     style: countyStyle,
-    //     onEachFeature: onEachFeature,
-    // }).addTo(map);
-
-   
     
 
 
@@ -358,6 +324,8 @@ const WeatherMap = () => {
 
     // Adding buttons to the map
      const customControl = L.Control.extend({
+      
+
         options: {
           position: 'topright'
         },
@@ -400,9 +368,9 @@ const WeatherMap = () => {
       // Expose function to window object so it can be accessed by inline onclick handlers
       window.switchMetric = (newMetric) => {
         setCurrentMetric(newMetric);
-        geoJsonLayer.eachLayer((layer) => {
-          layer.setStyle(style(layer.feature));
-        });
+        // geoJsonLayer.eachLayer((layer) => {
+        //   layer.setStyle(style(layer.feature));
+        // });
       };
 
     
