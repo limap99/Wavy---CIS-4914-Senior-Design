@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { FloridaCountiesData } from '../data/FloridaCountiesData';
 import {floridaData} from '../data/floridaData'
 import * as turf from '@turf/turf';
+import { grids, coordinatesToBeQueried } from '../data/gridData';
 
 
 
@@ -16,157 +17,67 @@ const WeatherMap = () => {
     // let map = null;
     const [currentMetric, setCurrentMetric] = useState('avg_temp');
 
-    
+ 
+    console.log(coordinatesToBeQueried)
 
-    const minLat = 24.396308;
-    const maxLat = 30.987679;
-    const minLon = -87.634643;
-    const maxLon = -80.031362;
-    const stepSize = 0.1;  // Adjust step size to get desired resolution
+    // coordinatesToBeQueried.forEach(coordinates => {
+    //   console.log(coordinates);
+    // });
 
-    let floridaPolygons = [];
+  
 
-    // for(let i = 0; i < FloridaCountiesData.features.length; i++){
-    //     if(FloridaCountiesData.features[i].geometry.type === 'Polygon'){
-    //         floridaPolygons.push(turf.polygon(FloridaCountiesData.features[i].geometry.coordinates))
-    //     }
-    //     else if(FloridaCountiesData.features[i].geometry.type === 'MultiPolygon'){ 
-    //         floridaPolygons.push(turf.multiPolygon(FloridaCountiesData.features[i].geometry.coordinates))
-    //     }
-    // }
-    console.log(floridaPolygons)
-    // const floridaPolygon = turf.polygon(floridaData.geometry.coordinates);
-    const floridaPolygon = turf.multiPolygon(floridaData.geometry.coordinates);
-
-
-
-    let rectangles = [];
-   
-    
-
-    let centers = []
-
-    // for(let i = 0; i < floridaPolygons.length; i++){
-    //     for(let lat = minLat; lat <= maxLat; lat += stepSize) {
-    //         for(let lon = minLon; lon <= maxLon; lon += stepSize) {
-    //             let centerPoint = turf.point([lon, lat]);
-    //             if (turf.booleanPointInPolygon(centerPoint, floridaPolygons[i])) {
-    //                 let boundingBox = [
-    //                     lon - stepSize / 2,
-    //                     lat - stepSize / 2,
-    //                     lon + stepSize / 2,
-    //                     lat + stepSize / 2
-    //                 ];
-    //                 let rectangle = turf.bboxPolygon(boundingBox);
-    //                 rectangles.push(rectangle);
-    
-    //                 let center = turf.center(rectangle);
-    //                 centers.push(center)
-                
-    //             }
-    //         }
-    //     }
-    // }
-    
-    for(let lat = minLat; lat <= maxLat; lat += stepSize) {
-        for(let lon = minLon; lon <= maxLon; lon += stepSize) {
-            let centerPoint = turf.point([lon, lat]);
-            if (turf.booleanPointInPolygon(centerPoint, floridaPolygon)) {
-                let boundingBox = [
-                    lon - stepSize / 2,
-                    lat - stepSize / 2,
-                    lon + stepSize / 2,
-                    lat + stepSize / 2
-                ];
-                let rectangle = turf.bboxPolygon(boundingBox);
-                rectangles.push(rectangle);
-
-                let center = turf.center(rectangle);
-                centers.push(center)
-            
-            }
-        }
-    }
-
-    console.log(rectangles.length);
-
-    // for(let lat = minLat; lat <= maxLat; lat += stepSize) {
-    //     for(let lon = minLon; lon <= maxLon; lon += stepSize) {
-    //         let centerPoint = turf.point([lon, lat]);
-    //         if (turf.booleanPointInPolygon(centerPoint, floridaPolygonMonroe)) {
-    //             let boundingBox = [
-    //                 lon - stepSize / 2,
-    //                 lat - stepSize / 2,
-    //                 lon + stepSize / 2,
-    //                 lat + stepSize / 2
-    //             ];
-    //             let rectangle = turf.bboxPolygon(boundingBox);
-    //             rectangles.push(rectangle);
-
-    //             let center = turf.center(rectangle);
-    //             centers.push(center)
-            
-    //         }
-    //     }
-    // }
 
    
-
-    rectangles[0].properties.avg_temp = 31
-    rectangles[1].properties.avg_temp = 21
+    // dummy data coloring
 
     for(let i = 0; i < 100; i++){
-        rectangles[i].properties.avg_temp = 1
+        grids[i].properties.avg_temp = 1
     }
 
     for(let i = 100; i < 300; i++){
-        rectangles[i].properties.avg_temp = 6
+        grids[i].properties.avg_temp = 6
     }
 
     for(let i = 300; i < 500; i++){
-        rectangles[i].properties.avg_temp = 11
+        grids[i].properties.avg_temp = 11
     }
 
     for(let i = 500; i < 700; i++){
-        rectangles[i].properties.avg_temp = 16
+        grids[i].properties.avg_temp = 16
     }
 
     for(let i = 700; i < 900; i++){
         if(i <= 800)
-            rectangles[i].properties.avg_temp = 21
+            grids[i].properties.avg_temp = 21
         else
-        rectangles[i].properties.avg_temp = 6
+        grids[i].properties.avg_temp = 6
     }
 
     for(let i = 900; i < 1200; i++){
-        rectangles[i].properties.avg_temp = 26
+        grids[i].properties.avg_temp = 26
     }
 
-    for(let i = 1200; i < rectangles.length; i++){
-        rectangles[i].properties.avg_temp = 31
+    for(let i = 1200; i < grids.length; i++){
+        grids[i].properties.avg_temp = 31
     }
 
     
-    for(let i = 0; i < rectangles.length; i++){
-        rectangles[i].properties.min_temp = 21
+    for(let i = 0; i < grids.length; i++){
+        grids[i].properties.min_temp = 21
     }
 
-    for(let i = 0; i < rectangles.length; i++){
-        rectangles[i].properties.max_temp = 31
-    }
-
-
-    for(let i = 0; i < rectangles.length; i++){
-        rectangles[i].properties.precipitation = 1.7
+    for(let i = 0; i < grids.length; i++){
+        grids[i].properties.max_temp = 6
     }
 
 
+    for(let i = 0; i < grids.length; i++){
+        grids[i].properties.precipitation = 1.7
+    }
 
-    
 
 
-
-    const grades = [-20, -10, 10, 15, 20, 25, 30];
+  
 
 
     const getColor = (value) => {
@@ -220,12 +131,12 @@ const WeatherMap = () => {
         return {
         fillColor: getColor(feature.properties[currentMetric]),
         //fillColor: 'red',
-        weight: 0,
-        //weight: 2,
+        //weight: 0,
+        weight: 2,
         opacity: 1,
-        color: 'white',
+        color: '#667',  // This should hide any remaining border
         dashArray: '3',
-        fillOpacity: 0.7
+        fillOpacity: 0.7,
         };
     };
 
@@ -233,8 +144,8 @@ const WeatherMap = () => {
         return {
         // fillColor: getColor(feature.properties[currentMetric]),
         fillColor: '',
-        // weight: 0,
-        weight: 2,
+        weight: 0,
+        //weight: 2,
         opacity: 1,
         color: 'white',
         dashArray: '3',
@@ -242,18 +153,7 @@ const WeatherMap = () => {
         };
     };
 
-    
-
-    // const style = (feature) => {
-    //     return {
-    //     fillColor: 'red',
-    //     weight: 2,
-    //     opacity: 1,
-    //     color: 'red',
-    //     dashArray: '3',
-    //     fillOpacity: 0.7
-    //     };
-    // };
+  
 
 
     const highlightFeature = (e) => {
@@ -343,8 +243,8 @@ const WeatherMap = () => {
     
 
     const bounds = [
-        [14.392411, -140.185547], // Southwest coordinates
-        [33.110291, -60.117188]  // Northeast coordinates
+        [14.392411, -100.185547], // Southwest coordinates
+        [33.110291, -40.117188]  // Northeast coordinates
       ];
 
     
@@ -428,25 +328,25 @@ const WeatherMap = () => {
     //   }).addTo(map);
     
 
-      geoJsonLayer = L.geoJSON(turf.featureCollection(rectangles), {
+      geoJsonLayer = L.geoJSON(turf.featureCollection(grids), {
         style: style,
     }).bindPopup(function (layer) {
       return `${layer.feature.properties.avg_temp}°C`;
         //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
       }).addTo(map);
 
-    //   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-    //     style: countyStyle,
-    //     onEachFeature: onEachFeature,
-    // }).bindPopup(function (layer) {
-    //   return `${layer.feature.properties[currentMetric]}°C`;
-    //     //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
-    //   }).addTo(map);
-
-    geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+      geoJsonLayer = L.geoJSON(FloridaCountiesData, {
         style: countyStyle,
         onEachFeature: onEachFeature,
-    }).addTo(map);
+    }).bindPopup(function (layer) {
+      return `${layer.feature.properties[currentMetric]}°C`;
+        //return `${layer.feature.properties.name}: ${layer.feature.properties.avg_temp}°C`;
+      }).addTo(map);
+
+    // geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+    //     style: countyStyle,
+    //     onEachFeature: onEachFeature,
+    // }).addTo(map);
 
    
     
