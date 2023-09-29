@@ -31,13 +31,23 @@ type Station struct {
 func fetchDataFromSupabase(supabaseURL, serviceKey, county string, startDay, startMonth, startYear, endDay, endMonth, endYear int16) ([]Station, error) {
 	baseURL := fmt.Sprintf("%s/rest/v1/Stations?select=*", supabaseURL)
 
-	requestURL := baseURL // Default to no additional filters
+	var requestURL string
+
 	if county != "" {
 		county = url.QueryEscape(county)
+		requestURL = fmt.Sprintf("%s&COUNTY=eq.%s", baseURL, county)
+	} else {
+		requestURL = baseURL
+	}
+
+	// Add date conditions only if startYear is provided
+	if startYear != 0 {
 		startDateCondition := fmt.Sprintf("YEAR=gte.%d&MONTH=gte.%d&DAY=gte.%d", startYear, startMonth, startDay)
 		endDateCondition := fmt.Sprintf("YEAR=lte.%d&MONTH=lte.%d&DAY=lte.%d", endYear, endMonth, endDay)
-		requestURL = fmt.Sprintf("%s&%s&%s&COUNTY=eq.%s", baseURL, startDateCondition, endDateCondition, county)
+
+		requestURL = fmt.Sprintf("%s&%s&%s", requestURL, startDateCondition, endDateCondition)
 	}
+
 	fmt.Println("Constructed URL:", requestURL)
 
 	req, err := http.NewRequest("GET", requestURL, nil)
@@ -96,21 +106,21 @@ func getAllStationData(c *gin.Context) {
 
 	county := c.Query("county")
 
-	startDayInt64, _ := strconv.ParseInt(c.Query("startDay"), 10, 16)
-	startMonthInt64, _ := strconv.ParseInt(c.Query("startMonth"), 10, 16)
-	startYearInt64, _ := strconv.ParseInt(c.Query("startYear"), 10, 16)
-	endDayInt64, _ := strconv.ParseInt(c.Query("endDay"), 10, 16)
-	endMonthInt64, _ := strconv.ParseInt(c.Query("endMonth"), 10, 16)
-	endYearInt64, _ := strconv.ParseInt(c.Query("endYear"), 10, 16)
+	// Only parse start and end dates if they are provided
+	var startDay, startMonth, startYear, endDay, endMonth, endYear int64
 
-	startDay := int16(startDayInt64)
-	startMonth := int16(startMonthInt64)
-	startYear := int16(startYearInt64)
-	endDay := int16(endDayInt64)
-	endMonth := int16(endMonthInt64)
-	endYear := int16(endYearInt64)
+	if c.Query("startDay") != "" && c.Query("startMonth") != "" && c.Query("startYear") != "" {
+		startDay, _ = strconv.ParseInt(c.Query("startDay"), 10, 16)
+		startMonth, _ = strconv.ParseInt(c.Query("startMonth"), 10, 16)
+		startYear, _ = strconv.ParseInt(c.Query("startYear"), 10, 16)
 
-	stationData, err := fetchDataFromSupabase(supabaseURL, serviceKey, county, startDay, startMonth, startYear, endDay, endMonth, endYear)
+		// If endDay, endMonth, or endYear is not provided, use startDay, startMonth, and startYear
+		endDay, _ = strconv.ParseInt(c.DefaultQuery("endDay", strconv.FormatInt(startDay, 10)), 10, 16)
+		endMonth, _ = strconv.ParseInt(c.DefaultQuery("endMonth", strconv.FormatInt(startMonth, 10)), 10, 16)
+		endYear, _ = strconv.ParseInt(c.DefaultQuery("endYear", strconv.FormatInt(startYear, 10)), 10, 16)
+	}
+
+	stationData, err := fetchDataFromSupabase(supabaseURL, serviceKey, county, int16(startDay), int16(startMonth), int16(startYear), int16(endDay), int16(endMonth), int16(endYear))
 	if err != nil {
 		log.Printf("Error while getting all station data: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
