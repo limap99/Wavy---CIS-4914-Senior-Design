@@ -7,13 +7,35 @@
     padding: 10px 50px;
     color: white;
     height: 2.5rem;
-    font-family: 'Pacifico', cursive; /* Use the font you prefer */
-  font-size: 1rem; /* Adjust the font size as needed */
-  border-bottom: 4px solid #fff; 
+    font-family: 'Pacifico', cursive;
+    font-size: 1rem;
+    border-bottom: 4px solid #fff;
   }
   
   .logo img {
-    width: 100px; /* Adjust the logo size as needed */
+    width: 100px;
+  }
+  
+  /* Style the navigation links */
+  .nav-links {
+    display: flex;
+    gap: 20px;
+    font-family: 'Montserrat', sans-serif; /* Use 'Montserrat' with a fallback sans-serif font */
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: white;
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .nav-links a:hover {
+    color: #ff5733; /* Change the color on hover */
+  }
+  
+  /* Style the active link */
+  .nav-links a.active {
+    color: #ff5733; /* Highlight color for the active link */
   }
   
   .time-range-selector {
