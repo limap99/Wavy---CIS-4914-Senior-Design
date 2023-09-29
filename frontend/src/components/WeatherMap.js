@@ -263,7 +263,7 @@ const WeatherMap = () => {
       info.onAdd = function(){
         this._div = L.DomUtil.create('div', 'info');
         this.update();
-        this._div.style.marginTop= '0rem';
+        this._div.style.marginTop= '`1.5rem';
 
         return this._div;
       }

@@ -36,6 +36,7 @@ html, body, #root {
 }
 
 .info {
+
   padding: 6px 8px;
   font: 14px/16px Arial, Helvetica, sans-serif;
   background: white;
@@ -78,5 +79,7 @@ html, body, #root {
 
 
 
-
+.info.leaflet-control{
+  margin-top: 2rem;
+}
 
