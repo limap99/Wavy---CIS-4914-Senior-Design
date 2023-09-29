@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import L, { rectangle } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FloridaCountiesData } from '../data/FloridaCountiesData';
-import {floridaData} from '../data/floridaData'
 import * as turf from '@turf/turf';
 import { grids, coordinatesToBeQueried } from '../data/gridData';
 
@@ -131,8 +130,8 @@ const WeatherMap = () => {
         return {
         fillColor: getColor(feature.properties[currentMetric]),
         //fillColor: 'red',
-        //weight: 0,
-        weight: 2,
+        weight: 0,
+        //weight: 2,
         opacity: 1,
         color: '#667',  // This should hide any remaining border
         dashArray: '3',

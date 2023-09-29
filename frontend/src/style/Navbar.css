@@ -1,0 +1,22 @@
+/* src/Navbar.css */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0c5169;
+    padding: 10px 50px;
+    color: white;
+    height: 2.5rem;
+    font-family: 'Pacifico', cursive; /* Use the font you prefer */
+  font-size: 1rem; /* Adjust the font size as needed */
+  border-bottom: 4px solid #fff; 
+  }
+  
+  .logo img {
+    width: 100px; /* Adjust the logo size as needed */
+  }
+  
+  .time-range-selector {
+    /* Add styling for the time range selector here */
+  }
+  
