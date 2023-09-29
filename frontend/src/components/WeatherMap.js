@@ -247,7 +247,7 @@ const WeatherMap = () => {
         minZoom: 7,
         maxBounds: bounds,  // Limit the pannable area
         maxBoundsViscosity: 0.75
-      }).setView([28, -82], 7);
+      }).setView([27.5, -82], 7);
 
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
