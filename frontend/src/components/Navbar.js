@@ -26,7 +26,6 @@ const Navbar = () => {
         </Link>
       </div>
       <div className="time-range-selector">
-        {/* Add your time range selector here */}
       </div>
     </div>
   );

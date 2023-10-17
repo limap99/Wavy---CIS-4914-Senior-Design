@@ -4,6 +4,9 @@ import 'leaflet/dist/leaflet.css';
 import { FloridaCountiesData } from '../data/FloridaCountiesData';
 import * as turf from '@turf/turf';
 import { grids, coordinatesToBeQueried } from '../data/gridData';
+import TemperatureRect from './TemperatureRect';
+import ReactDOM from 'react-dom';
+import PrecipitationRect from './PrecipitationRect';
 
 
 
@@ -143,8 +146,8 @@ const WeatherMap = () => {
         return {
         // fillColor: getColor(feature.properties[currentMetric]),
         fillColor: '',
-        weight: 0,
-        //weight: 2,
+        //weight: 0,
+        weight: 2,
         opacity: 1,
         color: 'white',
         dashArray: '3',
@@ -338,11 +341,12 @@ const WeatherMap = () => {
           container.style.marginRight = '1rem';
 
 
+
   
         container.innerHTML = `
       <div class="map-icon" style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer;" onclick="window.switchMetric('avg_temp')">
         <i class="fas fa-thermometer-half" style="font-size: 24px; color: #FFA500"></i>
-        <span style="margin-left: 8px;  font-weight: bold">Average Temperature</span>
+        <span style="margin-left: 8px;  font-weight: bold" >Average Temperature</span>
       </div>
       <div class="map-icon" style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer;" onclick="window.switchMetric('min_temp')">
         <i class="fas fa-thermometer-empty" style="font-size: 24px; color: #0000FF"></i>
@@ -357,12 +361,64 @@ const WeatherMap = () => {
         <span style="margin-left: 8px;  font-weight: bold">Average Precipitation</span>
       </div>
     `;
+
+    //  // Create a div element to render the TemperatureRect component
+    //  const temperatureRectComponent = document.createElement('div');
+    
+    //  // Render the TemperatureRect component inside the div
+    //  ReactDOM.render(<TemperatureRect />, temperatureRectComponent);
+    
+
+     
+
+    //  container.appendChild(temperatureRectComponent);
   
           return container;
         }
       });
+
+      const tempMeter = L.Control.extend({
+      
+
+        options: {
+          position: 'topright'
+        },
+
+        onAdd: function () {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+          
+
+
+
+        // Create a div element to render the TemperatureRect component
+        const temperatureRectComponent = document.createElement('div');
+        const precipitationRectComponent = document.createElement('div');
+        
+        // Render the TemperatureRect component inside the div
+        ReactDOM.render(<TemperatureRect />, temperatureRectComponent);
+        ReactDOM.render(<PrecipitationRect />, precipitationRectComponent);
+        
+        
+        if(currentMetric === 'precipitation'){
+          container.appendChild(precipitationRectComponent);
+        }
+        
+        else{
+          container.appendChild(temperatureRectComponent);
+        }
+        
+  
+          return container;
+        }
+      });
+
+
+      
   
      map.addControl(new customControl());
+     map.addControl(new tempMeter());
+
+     
   
       // Expose function to window object so it can be accessed by inline onclick handlers
       window.switchMetric = (newMetric) => {
@@ -387,6 +443,7 @@ const WeatherMap = () => {
 
   return (
     <div id="map" style={{ height: '100%', width: '100%' }}>
+    
     </div>
   );
 }

@@ -1,0 +1,115 @@
+/* ColoredRectangle.css */
+.colored-rectangle {
+    display: flex;
+    width: 20rem; /* Total width is 15% of the screen width */
+    justify-content: space-between; /* Spacing between colors */
+    align-items: center; /* Vertically center the colors */
+    height: 40px; /* Set a fixed height for the colored rectangle */
+    margin-top: 20rem; /* Center the rectangle horizontally */
+  
+  }
+  
+  .color {
+    flex: 1;
+    height: 100%; /* Each color takes up the full height of the rectangle */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .red {
+    background-color: #d8a6268c;
+    color: white;
+  }
+  
+  .green {
+    background-color: #FED976;
+    color: white;
+  }
+  
+  .blue {
+    background-color: #FEB24C;
+    color: white;
+  }
+  
+  .yellow {
+    background-color: #FD8D3C;
+    color: white;
+  }
+  
+  .orange {
+    background-color: #FC4E2A;
+    color: white;
+  }
+  
+  .purple {
+    background-color: #E31A1C;
+    color: white;
+  }
+  
+  .pink {
+    background-color: #BD0026;
+    color: white;
+  }
+  
+  .brown {
+    background-color: #800026;
+    color: white;
+  }
+
+  .prep1{
+    background-color: #0033CC;
+  }
+  .prep2{
+    background-color: #3366FF;
+  }
+  .prep3{
+    background-color: #6699FF;
+  }
+  .prep4{
+    background-color: #99CCFF;
+  }
+  .prep5{
+    background-color: #CCE5FF;
+  }
+  .prep6{
+    background-color: #E5F2FF;
+
+  }
+  .prep7{
+    background-color: #F0F8FF;
+  }
+  
+  .value {
+    text-align: center;
+    margin-top: 5px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .value-prep {
+    text-align: center;
+    margin-top: 5px;
+    color: #060f2c;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  
+  .unit {
+    font-size: 14px; /* Adjust the font size for the unit */
+    margin-top: 2px; /* Adjust the margin for spacing */
+    display: inline-block; /* Display the unit inline with the value */
+    margin-left: 4px; /* Add a small margin between value and unit */
+  }
+  
+
+  /* eturn value > 2.0 ? '#0033CC' : // Very Wet
+          value > 1.5 ? '#3366FF' : // Wet
+          value > 1.0? '#6699FF' : // Moderate
+          value > 0.5  ? '#99CCFF' :
+          value > 0.2  ? '#CCE5FF' :
+          value > 0.1  ? '#E5F2FF' :
+                     '#F0F8FF'; // Dry */
