@@ -7,7 +7,7 @@ import { grids, coordinatesToBeQueried } from '../data/gridData';
 import TemperatureRect from './TemperatureRect';
 import ReactDOM from 'react-dom';
 import PrecipitationRect from './PrecipitationRect';
-
+import DatePickerComponent from './DatePickerComponent';
 
 
 
@@ -412,11 +412,44 @@ const WeatherMap = () => {
         }
       });
 
+      const DateSelector = L.Control.extend({
+      
+
+        options: {
+          position: 'topleft'
+        },
+
+        onAdd: function () {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+          
+
+
+
+        // Create a div element to render the TemperatureRect component
+        const DateSelectorComponent= document.createElement('div');
+        
+        
+        // Render the TemperatureRect component inside the div
+        ReactDOM.render(<DatePickerComponent />, DateSelectorComponent);
+        
+    
+        container.appendChild(DateSelectorComponent);
+        
+        
+      
+        
+  
+          return container;
+        }
+      });
+
 
       
-  
+      
      map.addControl(new customControl());
+     map.addControl(new DateSelector());
      map.addControl(new tempMeter());
+    //  map.addControl(new DateSelector());
 
      
   
