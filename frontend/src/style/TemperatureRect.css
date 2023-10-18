@@ -60,6 +60,12 @@
   .no-pointer-events {
     pointer-events: none;
 }
+.leaflet-popup-content{
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1d6f2d;
+}
 
   .prep1{
     background-color: #0033CC;

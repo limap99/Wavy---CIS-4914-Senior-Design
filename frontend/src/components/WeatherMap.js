@@ -353,11 +353,11 @@ const WeatherMap = () => {
 
 
 
-      geoJsonLayer = L.geoJSON(turf.featureCollection(grids), {
-        style: style,
-    }).bindPopup(function (layer) {
-      return `${layer.feature.properties.avg_temp}°F`;
-      }).addTo(map);
+    //   geoJsonLayer = L.geoJSON(turf.featureCollection(grids), {
+    //     style: style,
+    // }).bindPopup(function (layer) {
+    //   return `${layer.feature.properties.avg_temp}°F`;
+    //   }).addTo(map);
 
     //   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
     //     style: countyStyle,
