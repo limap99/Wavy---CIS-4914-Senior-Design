@@ -1,11 +1,11 @@
 /* ColoredRectangle.css */
 .colored-rectangle {
-    display: flex;
-    width: 20rem; /* Total width is 15% of the screen width */
+    /* display: flex; */
+    width: 7rem; /* Total width is 15% of the screen width */
     justify-content: space-between; /* Spacing between colors */
     align-items: center; /* Vertically center the colors */
     height: 40px; /* Set a fixed height for the colored rectangle */
-    margin-top: 20rem; /* Center the rectangle horizontally */
+    margin-top: 7rem; /* Center the rectangle horizontally */
   
   }
   
@@ -18,45 +18,48 @@
     align-items: center;
   }
   
-  .red {
+  .temp1 {
     background-color: #d8a6268c;
     color: white;
   }
   
-  .green {
+  .temp2 {
     background-color: #FED976;
     color: white;
   }
   
-  .blue {
+  .temp3 {
     background-color: #FEB24C;
     color: white;
   }
   
-  .yellow {
+  .temp4 {
     background-color: #FD8D3C;
     color: white;
   }
   
-  .orange {
+  .temp5 {
     background-color: #FC4E2A;
     color: white;
   }
   
-  .purple {
+  .temp6 {
     background-color: #E31A1C;
     color: white;
   }
   
-  .pink {
+  .temp7 {
     background-color: #BD0026;
     color: white;
   }
   
-  .brown {
+  .temp8 {
     background-color: #800026;
     color: white;
   }
+  .no-pointer-events {
+    pointer-events: none;
+}
 
   .prep1{
     background-color: #0033CC;
