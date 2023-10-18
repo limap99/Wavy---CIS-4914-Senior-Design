@@ -7,6 +7,8 @@ import { grids, coordinatesToBeQueried } from '../data/gridData';
 import TemperatureRect from './TemperatureRect';
 import ReactDOM from 'react-dom';
 import PrecipitationRect from './PrecipitationRect';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+
 import DatePickerComponent from './DatePickerComponent';
 
 
@@ -16,69 +18,23 @@ import DatePickerComponent from './DatePickerComponent';
  
  
 const WeatherMap = () => { 
-    // let map = null;
+    
     const [currentMetric, setCurrentMetric] = useState('avg_temp');
 
+    const [data, setData] = useState(null);
+    const [dataLoaded, setDataLoad] = useState(false);
+
  
-    console.log(coordinatesToBeQueried)
+    // console.log(coordinatesToBeQueried)
 
     // coordinatesToBeQueried.forEach(coordinates => {
     //   console.log(coordinates);
     // });
-
+  let map = null
   
 
 
    
-    // dummy data coloring
-
-    for(let i = 0; i < 100; i++){
-        grids[i].properties.avg_temp = 1
-    }
-
-    for(let i = 100; i < 300; i++){
-        grids[i].properties.avg_temp = 6
-    }
-
-    for(let i = 300; i < 500; i++){
-        grids[i].properties.avg_temp = 11
-    }
-
-    for(let i = 500; i < 700; i++){
-        grids[i].properties.avg_temp = 16
-    }
-
-    for(let i = 700; i < 900; i++){
-        if(i <= 800)
-            grids[i].properties.avg_temp = 21
-        else
-        grids[i].properties.avg_temp = 6
-    }
-
-    for(let i = 900; i < 1200; i++){
-        grids[i].properties.avg_temp = 26
-    }
-
-    for(let i = 1200; i < grids.length; i++){
-        grids[i].properties.avg_temp = 31
-    }
-
-    
-    for(let i = 0; i < grids.length; i++){
-        grids[i].properties.min_temp = 21
-    }
-
-    for(let i = 0; i < grids.length; i++){
-        grids[i].properties.max_temp = 6
-    }
-
-
-    for(let i = 0; i < grids.length; i++){
-        grids[i].properties.precipitation = 1.7
-    }
-
-
-
   
 
 
@@ -86,45 +42,45 @@ const WeatherMap = () => {
         // Modify getColor to be generic for both temp and precip
         if (currentMetric === 'avg_temp') {
           // ... your existing temperature colors logic
-          return value > 30 ? '#800026' : // Very hot
-            value > 25 ? '#BD0026' : // Hot
-            value > 20 ? '#E31A1C' : // Warm
-            value> 15 ? '#FC4E2A' :
-            value > 10 ? '#FD8D3C' :
-            value > 5  ? '#FEB24C' :
-            value> 0 ? '#FED976' :
-                        '#9489d2';
+          return value > 100 ? '#800026' : // Very hot
+            value > 85 ? '#BD0026' : // Hot
+            value > 70 ? '#E31A1C' : // Warm
+            value> 55 ? '#FC4E2A' :
+            value > 40 ? '#FD8D3C' :
+            value > 25  ? '#FEB24C' :
+            value> 10 ? '#FED976' :
+                        '#d8a6268c';
         } 
         else if (currentMetric === 'min_temp') {
             // ... your existing temperature colors logic
-            return value > 30 ? '#800026' : // Very hot
-              value > 25 ? '#BD0026' : // Hot
-              value > 20 ? '#E31A1C' : // Warm
-              value> 15 ? '#FC4E2A' :
-              value > 10 ? '#FD8D3C' :
-              value > 5  ? '#FEB24C' :
-              value> 0 ? '#FED976' :
-                          '#9489d2';
+            return value > 100 ? '#800026' : // Very hot
+              value > 85 ? '#BD0026' : // Hot
+              value > 70 ? '#E31A1C' : // Warm
+              value> 55 ? '#FC4E2A' :
+              value > 40 ? '#FD8D3C' :
+              value > 25  ? '#FEB24C' :
+              value> 10 ? '#FED976' :
+                          '#d8a6268c';
         }
         if (currentMetric === 'max_temp') {
             // ... your existing temperature colors logic
-            return value > 30 ? '#800026' : // Very hot
-              value > 25 ? '#BD0026' : // Hot
-              value > 20 ? '#E31A1C' : // Warm
-              value> 15 ? '#FC4E2A' :
-              value > 10 ? '#FD8D3C' :
-              value > 5  ? '#FEB24C' :
-              value> 0 ? '#FED976' :
-                          '#9489d2';
+            return value > 100 ? '#800026' : // Very hot
+              value > 85 ? '#BD0026' : // Hot
+              value > 70 ? '#E31A1C' : // Warm
+              value> 55 ? '#FC4E2A' :
+              value > 40 ? '#FD8D3C' :
+              value > 25  ? '#FEB24C' :
+              value> 10 ? '#FED976' :
+                          '#d8a6268c';
           }
         else if (currentMetric === 'precipitation') {
           // ... add logic for precipitation colors
-          return value > 2.0 ? '#0033CC' : // Very Wet
-          value > 1.5 ? '#3366FF' : // Wet
-          value > 1.0? '#6699FF' : // Moderate
-          value > 0.5  ? '#99CCFF' :
-          value > 0.2  ? '#CCE5FF' :
-          value > 0.1  ? '#E5F2FF' :
+          return value > 0.2 ? '#0033CC' : // Very Wet
+          value > 0.1 ? '#3366FF' : // Wet
+          value > 0.07? '#6699FF' : // Moderate
+          value > 0.03  ? '#99CCFF' :
+          value > 0.02  ? '#CCE5FF' :
+          value > 0.015  ? '#E5F2FF' :
                      '#F0F8FF'; // Dry
         }
       };
@@ -155,6 +111,21 @@ const WeatherMap = () => {
         };
     };
 
+    const gridStyle = (feature) => {
+      return {
+      // fillColor: getColor(feature.properties[currentMetric]),
+      fillColor: '',
+      //weight: 0,
+      weight: 0,
+      pointerEvents: 'none',
+
+
+      
+     
+      fillOpacity: 0.0
+      };
+  };
+
   
 
 
@@ -171,10 +142,11 @@ const WeatherMap = () => {
         });
     
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-        layer.bringToFront();
+          layer.bringToFront();
         }
 
         info.update(layer.feature.properties)
+        layer.redraw();
     };
 
     const resetHighlight = (e) => {
@@ -202,31 +174,123 @@ const WeatherMap = () => {
         }
 
         info.update();
+        layer.redraw();
         
     };
 
+    const propagateClick = (e) => {
+      // Check if the event has a custom property indicating it's been propagated
+      if (e._propagated) return;
+    
+      const layerElement = e.target._path;
+      if (layerElement) {
+          layerElement.style.pointerEvents = 'none';
+          const newClick = new MouseEvent('click', {
+              bubbles: true,
+              cancelable: true,
+              view: window
+          });
+    
+          // Add a custom property to the new event
+          newClick._propagated = true;
+    
+          e.originalEvent.target.dispatchEvent(newClick);
+          setTimeout(() => {
+              layerElement.style.pointerEvents = '';
+          }, 10);
+      }
+    };
+    
+    
+    const showPopup = (e, layer) => {
+      const metric = layer.feature.properties[currentMetric];
+      if (currentMetric === "precipitation") {
+          layer.bindPopup(`${metric} in`).openPopup();
+      } else {
+          layer.bindPopup(`${metric}°F`).openPopup();
+      }
+  };
     
 
-   
+        const onEachFeatureGrid = (feature, layer) => {
+          layer.on({
+              click: (e) => showPopup(e, layer)
+          });
+      };
 
         const onEachFeature = (feature, layer) => {
         layer.on({
+        
+            
+            
             mouseover: (e) => highlightFeature(e, info),
             mouseout: (e) => resetHighlight(e, info, currentMetric),
             
         });
     };
+  
 
     let info;
 
 
   useEffect(() => {
 
+    fetch('http://localhost:4000/api/climate/')
+            .then(response => response.json())
+            .then(data => setData(data[1]))
+            .then(dataLoaded => setDataLoad(true))
+            .catch(error => console.error('Error fetching data:', error));
+    
 
-   
+    for(let i = 0; i < 100; i++){
+      grids[i].properties.avg_temp = -5
+  }
 
-    // Initialize the map
-    let map = null;
+  for(let i = 100; i < 300; i++){
+      grids[i].properties.avg_temp = 10
+  }
+
+  for(let i = 300; i < 500; i++){
+      grids[i].properties.avg_temp = 25
+  }
+
+  for(let i = 500; i < 700; i++){
+      grids[i].properties.avg_temp = 40
+  }
+
+  for(let i = 700; i < 900; i++){
+      if(i <= 800)
+          grids[i].properties.avg_temp = 55
+      else
+      grids[i].properties.avg_temp =110
+  }
+
+  for(let i = 900; i < 1200; i++){
+      grids[i].properties.avg_temp = 70
+  }
+
+  for(let i = 1200; i < grids.length; i++){
+      grids[i].properties.avg_temp = 95
+  }
+
+//   for(let i = 0; i < grids.length; i++){
+//     grids[i].properties.min_temp = data.Climate_Daily_Low_F;
+// }
+
+  
+  for(let i = 0; i < grids.length; i++){
+    if(dataLoaded){
+      grids[i].properties.min_temp = data.Climate_Daily_Low_F;
+      grids[i].properties.max_temp = data.Climate_Daily_High_F;
+      grids[i].properties.precipitation = data.Climate_Daily_Precip_In;
+    }
+     
+     
+  }
+ 
+
+    // // Initialize the map
+    //let map = null;
 
     
     
@@ -277,46 +341,74 @@ const WeatherMap = () => {
         //         '<b>' + props.name + '</b><br />' + props.avg_temp + ' &deg;C' :
         //         'Hover over a county');
         // }
-        if(currentMetric === 'avg_temp'){
-            this._div.innerHTML = '<h4>Location </h4>' + (props ?
-                '<b>' + props.name + '</b><br />' :
-                'Hover over a county');
-        }
-        else if(currentMetric === 'min_temp'){
-            this._div.innerHTML = '<h4>Minimum Temperature </h4>' + (props ?
-                '<b>' + props.name + '</b><br />' + props.avg_temp + ' &deg;C' :
-                'Hover over a county');
-        }
-        else if(currentMetric === 'max_temp'){
-            this._div.innerHTML = '<h4>Maximum Temperature </h4>' + (props ?
-                '<b>' + props.name + '</b><br />' + props.avg_temp + ' &deg;C' :
-                'Hover over a county');
-        }
-        else if(currentMetric === 'precipitation'){
-            this._div.innerHTML = '<h4>Average Precipitation </h4>' + (props ?
-                '<b>' + props.name + '</b><br />' + props.precipitation + ' mm' :
-                'Hover over a county');
-        }
-       
+        this._div.innerHTML = '<h4>Location </h4>' + (props ?
+          '<b>' + props.name + '</b><br />' :
+          'Hover over a county');
+        
       }
 
       info.addTo(map);
+
+      let metricsLayer = null;
 
 
 
       geoJsonLayer = L.geoJSON(turf.featureCollection(grids), {
         style: style,
     }).bindPopup(function (layer) {
-      return `${layer.feature.properties.avg_temp}°C`;
+      return `${layer.feature.properties.avg_temp}°F`;
       }).addTo(map);
 
-      geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-        style: countyStyle,
-        onEachFeature: onEachFeature,
-    }).bindPopup(function (layer) {
-      return `${layer.feature.properties[currentMetric]}°C`;
-      }).addTo(map);
+    //   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+    //     style: countyStyle,
+    //     onEachFeature: onEachFeature,
+    // }).bindPopup(function (layer) {
+    //   return `${layer.feature.properties[currentMetric]}°F`;
+    //   }).addTo(map);
 
+    //   metricsLayer = L.geoJSON(turf.featureCollection(grids), {
+    //     style: gridStyle,
+    //     onEachFeature: onEachFeatureGrid,
+    // }).bindPopup(function (layer) {
+    //   if(currentMetric === "precipitation"){
+    //     return `${layer.feature.properties[currentMetric]} in`;
+    //   }
+    //   else{
+    //     return `${layer.feature.properties[currentMetric]}°F`;
+    //   }
+    //   }).addTo(map);
+
+      
+
+    metricsLayer = L.geoJSON(turf.featureCollection(grids), {
+      style: style,
+  }).addTo(map);
+
+  geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+    style: countyStyle,
+    onEachFeature: onEachFeature,
+}).addTo(map);
+
+  map.on('click', function(e) {
+    const clickedPoint = turf.point([e.latlng.lng, e.latlng.lat]);
+    metricsLayer.eachLayer(layer => {
+        if (turf.booleanPointInPolygon(clickedPoint, layer.feature)) {
+            showPopup(e, layer);
+        }
+    });
+});
+
+
+
+
+  //   geoJsonLayer.eachLayer(function (layer) {
+  //     layer.getElement().style.pointerEvents = 'none';
+  // });
+
+   
+
+
+      
     
 
 
@@ -472,6 +564,8 @@ const WeatherMap = () => {
     };
   }, [currentMetric]);
 
+  console.log(data)
+  console.log(coordinatesToBeQueried)
   
 
   return (

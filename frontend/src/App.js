@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes }  from 'react-router-dom';
 import TemperatureRect from './components/TemperatureRect';
 import PrecipitationRect from './components/PrecipitationRect'
 import DatePickerComponent from './components/DatePickerComponent';
+import BackendConnection from './components/BackendConnection';
 
 const Home = () => <h2>Home Page</h2>;
 
@@ -14,7 +15,7 @@ const App = () => (
     <div className="App">
       <Navbar />
       <Routes>
-        <Route path="/" element={<DatePickerComponent />} />
+        <Route path="/" element={<BackendConnection/>} />
         <Route path="/weather-map" element={<WeatherMap />} />
       </Routes>
     </div>
