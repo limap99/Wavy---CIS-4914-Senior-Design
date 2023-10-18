@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/gin-contrib/cors"
 )
 
 type JSONDate struct {
@@ -108,6 +109,11 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	router.Use(cors.New(config))
+
 	router.GET("/api/climate/", getAllClimateData)
-	router.Run(":3000")
+	router.Run(":4000")
 }
