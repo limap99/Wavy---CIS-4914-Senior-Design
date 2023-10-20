@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/gin-contrib/cors"
+	_ "github.com/lib/pq"
 )
 
 type JSONDate struct {
@@ -35,6 +38,12 @@ type ClimateData struct {
 	Climate_Daily_Low_F   float64   `json:"Climate_Daily_Low_F"`
 	Climate_Daily_Precip_In float64 `json:"Climate_Daily_Precip_In"`
 	Date                  JSONDate  `json:"Date"`
+}
+
+type ClimateAvgData struct {
+	Lat                  float64 `json:"Lat"`
+	Long                 float64 `json:"Long"`
+	Climate_Daily_High_F float64 `json:"Climate_Daily_High_F"`
 }
 
 func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error) {
@@ -61,21 +70,58 @@ func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error
 		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
-	// Print raw response for debugging
-	fmt.Println("Response from Supabase:", string(body))
-
-	// Check the HTTP status code
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Error Response from Supabase:", string(body))
-		return nil, fmt.Errorf("unexpected status code: %v", resp.Status)
-	}
-
 	var data []ClimateData
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, fmt.Errorf("error unmarshalling data: %v", err)
 	}
 
 	return data, nil
+}
+
+func getAvgTemperatures() ([]ClimateAvgData, error) {
+	// Load the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+
+	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+	SELECT 
+    "Lat" AS Lat,
+    "Long" AS Long,
+    AVG("Climate_Daily_High_F") AS avg_temp
+FROM 
+    "Climate Data"
+GROUP BY 
+    "Lat", "Long";
+`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var avgData []ClimateAvgData
+	for rows.Next() {
+		var data ClimateAvgData
+		err = rows.Scan(&data.Lat, &data.Long, &data.Climate_Daily_High_F)
+		if err != nil {
+			return nil, err
+		}
+		avgData = append(avgData, data)
+	}
+
+	return avgData, nil
 }
 
 func getAllClimateData(c *gin.Context) {
@@ -95,6 +141,21 @@ func getAllClimateData(c *gin.Context) {
 	c.JSON(http.StatusOK, climateData)
 }
 
+func getAvgClimateData(c *gin.Context) {
+	avgData, err := getAvgTemperatures()
+	if err != nil {
+		log.Printf("Error while getting avg climate data: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error while getting avg climate data",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, avgData)
+}
+
+
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
@@ -108,6 +169,12 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	router.Use(cors.New(config))
+
 	router.GET("/api/climate/", getAllClimateData)
-	router.Run(":3000")
+	router.GET("api/climate/avg", getAvgClimateData)
+	router.Run(":4000")
 }
