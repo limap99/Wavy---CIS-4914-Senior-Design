@@ -44,7 +44,29 @@ type ClimateAvgData struct {
 	Lat                  float64 `json:"Lat"`
 	Long                 float64 `json:"Long"`
 	Climate_Daily_High_F float64 `json:"Climate_Daily_High_F"`
+	Climate_Daily_Low_F	 float64 `json:"Climate_Daily_Low_F`
 }
+
+type ClimateMaxHighData struct {
+	Lat                  float64 `json:"Lat"`
+	Long                 float64 `json:"Long"`
+	Max_Daily_High_F     float64 `json:"Max_Daily_High_F"`
+}
+
+type ClimateMinLowData struct {
+	Lat                  float64 `json:"Lat"`
+	Long                 float64 `json:"Long"`
+	Min_Daily_Low_F     float64 `json:"Max_Daily_High_F"`
+}
+
+type ClimateAvgPrecipData struct {
+	Lat                    float64 `json:"Lat"`
+	Long                   float64 `json:"Long"`
+	Avg_Daily_Precip_In    float64 `json:"Avg_Daily_Precip_In"`
+}
+
+
+
 
 func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error) {
 	url := supabaseURL + "/rest/v1/Climate Data"
@@ -79,7 +101,6 @@ func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error
 }
 
 func getAvgTemperatures() ([]ClimateAvgData, error) {
-	// Load the .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -95,14 +116,16 @@ func getAvgTemperatures() ([]ClimateAvgData, error) {
 	defer db.Close()
 
 	query := `
-	SELECT 
-    "Lat" AS Lat,
-    "Long" AS Long,
-    AVG("Climate_Daily_High_F") AS avg_temp
-FROM 
-    "Climate Data"
-GROUP BY 
-    "Lat", "Long";
+    SELECT 
+        "Lat" AS Lat,
+        "Long" AS Long,
+        AVG(( "Climate_Daily_High_F" + "Climate_Daily_Low_F" ) / 2) AS avg_temp
+    FROM 
+        "Climate Data"
+    WHERE
+        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+    GROUP BY 
+        "Lat", "Long";
 `
 
 	rows, err := db.Query(query)
@@ -123,6 +146,145 @@ GROUP BY
 
 	return avgData, nil
 }
+
+func getMaxHighTemperatures() ([]ClimateMaxHighData, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+    SELECT 
+        "Lat" AS Lat,
+        "Long" AS Long,
+        MAX("Climate_Daily_High_F") AS max_high_temp
+    FROM 
+        "Climate Data"
+    WHERE
+        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+    GROUP BY 
+        "Lat", "Long";
+`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var maxHighData []ClimateMaxHighData
+	for rows.Next() {
+		var data ClimateMaxHighData
+		err = rows.Scan(&data.Lat, &data.Long, &data.Max_Daily_High_F)
+		if err != nil {
+			return nil, err
+		}
+		maxHighData = append(maxHighData, data)
+	}
+
+	return maxHighData, nil
+}
+
+func getMinLowTemperatures() ([]ClimateMinLowData, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+    SELECT 
+        "Lat" AS Lat,
+        "Long" AS Long,
+        MIN("Climate_Daily_Low_F") AS min_low_temp
+    FROM 
+        "Climate Data"
+    WHERE
+        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+    GROUP BY 
+        "Lat", "Long";
+`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var minLowData []ClimateMinLowData
+	for rows.Next() {
+		var data ClimateMinLowData
+		err = rows.Scan(&data.Lat, &data.Long, &data.Min_Daily_Low_F)
+		if err != nil {
+			return nil, err
+		}
+		minLowData = append(minLowData, data)
+	}
+
+	return minLowData, nil
+}
+
+func getAvgPrecipitation() ([]ClimateAvgPrecipData, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+    SELECT 
+        "Lat" AS Lat,
+        "Long" AS Long,
+        AVG("Climate_Daily_Precip_In") AS avg_precip
+    FROM 
+        "Climate Data"
+    WHERE
+        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+    GROUP BY 
+        "Lat", "Long";
+`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var avgPrecipData []ClimateAvgPrecipData
+	for rows.Next() {
+		var data ClimateAvgPrecipData
+		err = rows.Scan(&data.Lat, &data.Long, &data.Avg_Daily_Precip_In)
+		if err != nil {
+			return nil, err
+		}
+		avgPrecipData = append(avgPrecipData, data)
+	}
+
+	return avgPrecipData, nil
+}
+
 
 func getAllClimateData(c *gin.Context) {
 	supabaseURL := os.Getenv("SUPABASE_URL")
@@ -154,6 +316,45 @@ func getAvgClimateData(c *gin.Context) {
 	c.JSON(http.StatusOK, avgData)
 }
 
+func getMaxHighClimateData(c *gin.Context) {
+	maxHighData, err := getMaxHighTemperatures()
+	if err != nil {
+		log.Printf("Error while getting max high climate data: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error while getting max high climate data",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, maxHighData)
+}
+
+func getMinLowClimateData(c *gin.Context) {
+	minLowData, err := getMinLowTemperatures()
+	if err != nil {
+		log.Printf("Error while getting min low climate data: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error while getting min low climate data",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, minLowData)
+}
+
+func getAvgPrecipClimateData(c *gin.Context) {
+	avgPrecipData, err := getAvgPrecipitation()
+	if err != nil {
+		log.Printf("Error while getting avg precipitation data: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error while getting avg precipitation data",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, avgPrecipData)
+}
+
 
 
 func main() {
@@ -176,5 +377,8 @@ func main() {
 
 	router.GET("/api/climate/", getAllClimateData)
 	router.GET("api/climate/avg", getAvgClimateData)
+	router.GET("/api/climate/max-high", getMaxHighClimateData)
+	router.GET("/api/climate/min-low", getMinLowClimateData)
+	router.GET("/api/climate/avg-precip", getAvgPrecipClimateData)
 	router.Run(":4000")
 }
