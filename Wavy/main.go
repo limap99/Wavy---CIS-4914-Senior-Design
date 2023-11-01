@@ -1,6 +1,6 @@
 package main
 
-import (
+import ( 
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -41,10 +41,9 @@ type ClimateData struct {
 }
 
 type ClimateAvgData struct {
-	Lat                  float64 `json:"Lat"`
-	Long                 float64 `json:"Long"`
-	Climate_Daily_High_F float64 `json:"Climate_Daily_High_F"`
-	Climate_Daily_Low_F	 float64 `json:"Climate_Daily_Low_F`
+    Lat         float64
+    Long        float64
+    AvgTemp     float64  // This field represents the average temperature
 }
 
 type ClimateMaxHighData struct {
@@ -56,7 +55,7 @@ type ClimateMaxHighData struct {
 type ClimateMinLowData struct {
 	Lat                  float64 `json:"Lat"`
 	Long                 float64 `json:"Long"`
-	Min_Daily_Low_F     float64 `json:"Max_Daily_High_F"`
+	Min_Daily_Low_F     float64 `json:"Min_Daily_Low_F"`
 }
 
 type ClimateAvgPrecipData struct {
@@ -64,8 +63,6 @@ type ClimateAvgPrecipData struct {
 	Long                   float64 `json:"Long"`
 	Avg_Daily_Precip_In    float64 `json:"Avg_Daily_Precip_In"`
 }
-
-
 
 
 func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error) {
@@ -100,7 +97,7 @@ func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error
 	return data, nil
 }
 
-func getAvgTemperatures() ([]ClimateAvgData, error) {
+func getAvgTemperatures(date string) ([]ClimateAvgData, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -123,12 +120,13 @@ func getAvgTemperatures() ([]ClimateAvgData, error) {
     FROM 
         "Climate Data"
     WHERE
-        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+        "Date" = $1
     GROUP BY 
         "Lat", "Long";
 `
 
-	rows, err := db.Query(query)
+
+rows, err := db.Query(query, date)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +135,7 @@ func getAvgTemperatures() ([]ClimateAvgData, error) {
 	var avgData []ClimateAvgData
 	for rows.Next() {
 		var data ClimateAvgData
-		err = rows.Scan(&data.Lat, &data.Long, &data.Climate_Daily_High_F)
+		err = rows.Scan(&data.Lat, &data.Long, &data.AvgTemp)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +145,7 @@ func getAvgTemperatures() ([]ClimateAvgData, error) {
 	return avgData, nil
 }
 
-func getMaxHighTemperatures() ([]ClimateMaxHighData, error) {
+func getMaxHighTemperatures(date string) ([]ClimateMaxHighData, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -169,12 +167,12 @@ func getMaxHighTemperatures() ([]ClimateMaxHighData, error) {
     FROM 
         "Climate Data"
     WHERE
-        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+        "Date" = $1
     GROUP BY 
         "Lat", "Long";
 `
 
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, date)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +191,7 @@ func getMaxHighTemperatures() ([]ClimateMaxHighData, error) {
 	return maxHighData, nil
 }
 
-func getMinLowTemperatures() ([]ClimateMinLowData, error) {
+func getMinLowTemperatures(date string) ([]ClimateMinLowData, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -215,12 +213,12 @@ func getMinLowTemperatures() ([]ClimateMinLowData, error) {
     FROM 
         "Climate Data"
     WHERE
-        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+        "Date" = $1
     GROUP BY 
         "Lat", "Long";
 `
 
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, date)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +237,7 @@ func getMinLowTemperatures() ([]ClimateMinLowData, error) {
 	return minLowData, nil
 }
 
-func getAvgPrecipitation() ([]ClimateAvgPrecipData, error) {
+func getAvgPrecipitation(date string) ([]ClimateAvgPrecipData, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -261,28 +259,25 @@ func getAvgPrecipitation() ([]ClimateAvgPrecipData, error) {
     FROM 
         "Climate Data"
     WHERE
-        "Date" BETWEEN '2023-01-01' AND '2023-07-18'
+        "Date" = $1
     GROUP BY 
         "Lat", "Long";
 `
-
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, date)
 	if err != nil {
-		return nil, err
+   	 	return nil, err
 	}
 	defer rows.Close()
 
-	var avgPrecipData []ClimateAvgPrecipData
+	var climateData []ClimateAvgPrecipData
 	for rows.Next() {
-		var data ClimateAvgPrecipData
-		err = rows.Scan(&data.Lat, &data.Long, &data.Avg_Daily_Precip_In)
-		if err != nil {
-			return nil, err
-		}
-		avgPrecipData = append(avgPrecipData, data)
+    	var data ClimateAvgPrecipData
+    	if err := rows.Scan(&data.Lat, &data.Long, &data.Avg_Daily_Precip_In); err != nil {
+        	return nil, err
+    	}
+    	climateData = append(climateData, data)
 	}
-
-	return avgPrecipData, nil
+	return climateData, nil
 }
 
 
@@ -304,7 +299,8 @@ func getAllClimateData(c *gin.Context) {
 }
 
 func getAvgClimateData(c *gin.Context) {
-	avgData, err := getAvgTemperatures()
+    date := c.DefaultQuery("date", "2023-01-01") // defaulting to "2023-01-01" if not provided
+    avgData, err := getAvgTemperatures(date)
 	if err != nil {
 		log.Printf("Error while getting avg climate data: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -317,7 +313,8 @@ func getAvgClimateData(c *gin.Context) {
 }
 
 func getMaxHighClimateData(c *gin.Context) {
-	maxHighData, err := getMaxHighTemperatures()
+    date := c.DefaultQuery("date", "2023-01-01")  // default to "2023-01-01" if not provided
+    maxHighData, err := getMaxHighTemperatures(date)
 	if err != nil {
 		log.Printf("Error while getting max high climate data: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -330,7 +327,8 @@ func getMaxHighClimateData(c *gin.Context) {
 }
 
 func getMinLowClimateData(c *gin.Context) {
-	minLowData, err := getMinLowTemperatures()
+    date := c.DefaultQuery("date", "2023-01-01")  // default to "2023-01-01" if not provided
+    minLowData, err := getMinLowTemperatures(date)
 	if err != nil {
 		log.Printf("Error while getting min low climate data: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -343,19 +341,14 @@ func getMinLowClimateData(c *gin.Context) {
 }
 
 func getAvgPrecipClimateData(c *gin.Context) {
-	avgPrecipData, err := getAvgPrecipitation()
-	if err != nil {
-		log.Printf("Error while getting avg precipitation data: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Error while getting avg precipitation data",
-			"error":   err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, avgPrecipData)
+    date := c.DefaultQuery("date", "2023-01-01")  // default to "2023-01-01" if not provided
+    avgPrecipData, err := getAvgPrecipitation(date)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, avgPrecipData)
 }
-
-
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -380,5 +373,6 @@ func main() {
 	router.GET("/api/climate/max-high", getMaxHighClimateData)
 	router.GET("/api/climate/min-low", getMinLowClimateData)
 	router.GET("/api/climate/avg-precip", getAvgPrecipClimateData)
+
 	router.Run(":4000")
 }
