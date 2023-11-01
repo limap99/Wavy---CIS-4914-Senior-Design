@@ -6,7 +6,8 @@ const minLat = 24.396308;
 const maxLat = 30.987679;
 const minLon = -87.634643;
 const maxLon = -80.031362;
-const stepSize = 0.10001;;  // Adjust step size to get desired resolution
+//const stepSize = 0.10001;;  // Adjust step size to get desired resolution
+const stepSize = 0.25001;;
 
 
 const floridaPolygon = turf.multiPolygon(floridaData.geometry.coordinates);

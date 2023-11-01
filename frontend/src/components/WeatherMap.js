@@ -25,7 +25,9 @@ const WeatherMap = () => {
     const [dataLoaded, setDataLoad] = useState(false);
 
  
-    // console.log(coordinatesToBeQueried)
+   // alert(coordinatesToBeQueried.length)
+
+   console.log(coordinatesToBeQueried[0])
 
     // coordinatesToBeQueried.forEach(coordinates => {
     //   console.log(coordinates);
@@ -89,7 +91,7 @@ const WeatherMap = () => {
         return {
         fillColor: getColor(feature.properties[currentMetric]),
         //fillColor: 'red',
-        weight: 0,
+       weight: 0,
         //weight: 2,
         opacity: 1,
         color: '#667',  // This should hide any remaining border
@@ -237,56 +239,66 @@ const WeatherMap = () => {
 
     fetch('http://localhost:4000/api/climate/')
             .then(response => response.json())
-            .then(data => setData(data[1]))
+            .then(data => setData(data))
             .then(dataLoaded => setDataLoad(true))
             .catch(error => console.error('Error fetching data:', error));
     
 
-    for(let i = 0; i < 100; i++){
-      grids[i].properties.avg_temp = -5
+    for(let i = 0; i < 255; i++){
+      grids[i].properties.avg_temp = 57
   }
 
-  for(let i = 100; i < 300; i++){
-      grids[i].properties.avg_temp = 10
-  }
+  // for(let i = 100; i < 300; i++){
+  //     grids[i].properties.avg_temp = 10
+  // }
 
-  for(let i = 300; i < 500; i++){
-      grids[i].properties.avg_temp = 25
-  }
+  // for(let i = 300; i < 500; i++){
+  //     grids[i].properties.avg_temp = 25
+  // }
 
-  for(let i = 500; i < 700; i++){
-      grids[i].properties.avg_temp = 40
-  }
+//   for(let i = 500; i < 700; i++){
+//       grids[i].properties.avg_temp = 40
+//   }
 
-  for(let i = 700; i < 900; i++){
-      if(i <= 800)
-          grids[i].properties.avg_temp = 55
-      else
-      grids[i].properties.avg_temp =110
-  }
+//   for(let i = 700; i < 900; i++){
+//       if(i <= 800)
+//           grids[i].properties.avg_temp = 55
+//       else
+//       grids[i].properties.avg_temp =110
+//   }
 
-  for(let i = 900; i < 1200; i++){
-      grids[i].properties.avg_temp = 70
-  }
+//   for(let i = 900; i < 1200; i++){
+//       grids[i].properties.avg_temp = 70
+//   }
 
-  for(let i = 1200; i < grids.length; i++){
-      grids[i].properties.avg_temp = 95
-  }
+//   for(let i = 1200; i < grids.length; i++){
+//       grids[i].properties.avg_temp = 95
+//   }
 
-//   for(let i = 0; i < grids.length; i++){
-//     grids[i].properties.min_temp = data.Climate_Daily_Low_F;
-// }
+// //   for(let i = 0; i < grids.length; i++){
+// //     grids[i].properties.min_temp = data.Climate_Daily_Low_F;
+// // }
 
   
-  for(let i = 0; i < grids.length; i++){
-    if(dataLoaded){
-      grids[i].properties.min_temp = data.Climate_Daily_Low_F;
-      grids[i].properties.max_temp = data.Climate_Daily_High_F;
-      grids[i].properties.precipitation = data.Climate_Daily_Precip_In;
-    }
+  // for(let i = 0; i < grids.length; i++){
+  //   if(dataLoaded){
+  //     grids[i].properties.min_temp = data[1].Climate_Daily_Low_F;
+  //     grids[i].properties.max_temp = data[1].Climate_Daily_High_F;
+  //     grids[i].properties.precipitation = data[1].Climate_Daily_Precip_In;
+  //   }
      
      
-  }
+  // }
+
+  // for(let i = 0; i < data.length; i++){
+  //   if(dataLoaded){
+  //     grids[i].properties.min_temp = data[i].Climate_Daily_Low_F;
+  //     grids[i].properties.max_temp = data[i].Climate_Daily_High_F;
+  //     grids[i].properties.precipitation = data[i].Climate_Daily_Precip_In;
+  //   }
+     
+     
+  // }
  
 
     // // Initialize the map

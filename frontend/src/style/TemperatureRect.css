@@ -5,7 +5,7 @@
     justify-content: space-between; /* Spacing between colors */
     align-items: center; /* Vertically center the colors */
     height: 40px; /* Set a fixed height for the colored rectangle */
-    margin-top: 10rem; /* Center the rectangle horizontally */
+    margin-top: 8rem; /* Center the rectangle horizontally */
   
   }
   
@@ -66,6 +66,11 @@
   font-weight: bold;
   color: #f2f7f3;
 }
+/* .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #4d3ced;
+  color: #333;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+} */
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
   background: #4d3ced;
   color: #333;
@@ -106,7 +111,7 @@
   .value-prep {
     text-align: center;
     margin-top: 5px;
-    color: #060f2c;
+    color: #dc417d;
     font-size: 0.75rem;
     font-weight: bold;
   }
