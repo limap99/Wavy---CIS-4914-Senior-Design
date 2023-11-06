@@ -5,7 +5,7 @@
     justify-content: space-between; /* Spacing between colors */
     align-items: center; /* Vertically center the colors */
     height: 40px; /* Set a fixed height for the colored rectangle */
-    margin-top: 8rem; /* Center the rectangle horizontally */
+    margin-top: 2rem; /* Center the rectangle horizontally */
   
   }
   

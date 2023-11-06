@@ -91,7 +91,7 @@ const WeatherMap = () => {
         return {
         fillColor: getColor(feature.properties[currentMetric]),
         //fillColor: 'red',
-       weight: 0,
+        weight: 0,
         //weight: 2,
         opacity: 1,
         color: '#667',  // This should hide any remaining border
