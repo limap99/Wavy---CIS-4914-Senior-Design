@@ -1,0 +1,134 @@
+/* ColoredRectangle.css */
+.colored-rectangle {
+    /* display: flex; */
+    width: 7rem; /* Total width is 15% of the screen width */
+    justify-content: space-between; /* Spacing between colors */
+    align-items: center; /* Vertically center the colors */
+    height: 40px; /* Set a fixed height for the colored rectangle */
+    margin-top: 2rem; /* Center the rectangle horizontally */
+  
+  }
+  
+  .color {
+    flex: 1;
+    height: 100%; /* Each color takes up the full height of the rectangle */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .temp1 {
+    background-color: #d8a6268c;
+    color: white;
+  }
+  
+  .temp2 {
+    background-color: #FED976;
+    color: white;
+  }
+  
+  .temp3 {
+    background-color: #FEB24C;
+    color: white;
+  }
+  
+  .temp4 {
+    background-color: #FD8D3C;
+    color: white;
+  }
+  
+  .temp5 {
+    background-color: #FC4E2A;
+    color: white;
+  }
+  
+  .temp6 {
+    background-color: #E31A1C;
+    color: white;
+  }
+  
+  .temp7 {
+    background-color: #BD0026;
+    color: white;
+  }
+  
+  .temp8 {
+    background-color: #800026;
+    color: white;
+  }
+  .no-pointer-events {
+    pointer-events: none;
+}
+.leaflet-popup-content{
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #f2f7f3;
+}
+/* .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #4d3ced;
+  color: #333;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+} */
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #4d3ced;
+  color: #333;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+
+  .prep1{
+    background-color: #0033CC;
+  }
+  .prep2{
+    background-color: #3366FF;
+  }
+  .prep3{
+    background-color: #6699FF;
+  }
+  .prep4{
+    background-color: #99CCFF;
+  }
+  .prep5{
+    background-color: #CCE5FF;
+  }
+  .prep6{
+    background-color: #E5F2FF;
+
+  }
+  .prep7{
+    background-color: #F0F8FF;
+  }
+  
+  .value {
+    text-align: center;
+    margin-top: 5px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .value-prep {
+    text-align: center;
+    margin-top: 5px;
+    color: #dc417d;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  
+  .unit {
+    font-size: 14px; /* Adjust the font size for the unit */
+    margin-top: 2px; /* Adjust the margin for spacing */
+    display: inline-block; /* Display the unit inline with the value */
+    margin-left: 4px; /* Add a small margin between value and unit */
+  }
+  
+
+  /* eturn value > 2.0 ? '#0033CC' : // Very Wet
+          value > 1.5 ? '#3366FF' : // Wet
+          value > 1.0? '#6699FF' : // Moderate
+          value > 0.5  ? '#99CCFF' :
+          value > 0.2  ? '#CCE5FF' :
+          value > 0.1  ? '#E5F2FF' :
+                     '#F0F8FF'; // Dry */
