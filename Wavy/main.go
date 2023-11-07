@@ -2,9 +2,7 @@ package main
 
 import ( 
 	"database/sql"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	
 	"log"
 	"net/http"
 	"os"
@@ -14,9 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/gin-contrib/cors"
-
-	"github.com/lib/pq"
-
+	_ "github.com/lib/pq"
 )
 
 type JSONDate struct {
@@ -33,324 +29,401 @@ func (jd *JSONDate) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type ClimateData struct {
-	Lat                   float64   `json:"Lat"`
-	Long                  float64   `json:"Long"`
-	Climate_Daily_High_F  float64   `json:"Climate_Daily_High_F"`
-	Climate_Daily_Low_F   float64   `json:"Climate_Daily_Low_F"`
-	Climate_Daily_Precip_In float64 `json:"Climate_Daily_Precip_In"`
-	Date                  JSONDate  `json:"Date"`
+type Era5Data struct {
+	Time      time.Time       `json:"time"`
+	Latitude  float64         `json:"latitude"`
+	Longitude float64         `json:"longitude"`
+	U10Min    sql.NullFloat64 `json:"u10_min,omitempty"` // using sql.NullFloat64 to handle NULLs
+	U10Mean   sql.NullFloat64 `json:"u10_mean,omitempty"`
+	U10Max    sql.NullFloat64 `json:"u10_max,omitempty"`
+	V10Min    sql.NullFloat64 `json:"v10_min,omitempty"`
+	V10Mean   sql.NullFloat64 `json:"v10_mean,omitempty"`
+	V10Max    sql.NullFloat64 `json:"v10_max,omitempty"`
+	D2mMin    sql.NullFloat64 `json:"d2m_min,omitempty"`
+	D2mMean   sql.NullFloat64 `json:"d2m_mean,omitempty"`
+	D2mMax    sql.NullFloat64 `json:"d2m_max,omitempty"`
+	T2mMin    sql.NullFloat64 `json:"t2m_min,omitempty"`
+	T2mMean   sql.NullFloat64 `json:"t2m_mean,omitempty"`
+	T2mMax    sql.NullFloat64 `json:"t2m_max,omitempty"`
+	TccMin    sql.NullFloat64 `json:"tcc_min,omitempty"`
+	TccMean   sql.NullFloat64 `json:"tcc_mean,omitempty"`
+	TccMax    sql.NullFloat64 `json:"tcc_max,omitempty"`
+	MwdMean   sql.NullFloat64 `json:"mwd_mean,omitempty"`
+	MwpMean   sql.NullFloat64 `json:"mwp_mean,omitempty"`
+	SstMean   sql.NullFloat64 `json:"sst_mean,omitempty"`
+	SwhMean   sql.NullFloat64 `json:"swh_mean,omitempty"`
+	TpEod     sql.NullFloat64 `json:"tp_eod,omitempty"`
+	//Geom      pq.Geometry     `json:"geom,omitempty"` // pq.Geometry is a placeholder, actual type depends on how you handle geometry types
 }
 
-type ClimateAvgData struct {
-    Lat         float64
-    Long        float64
-    AvgTemp     float64  // This field represents the average temperature
+type AverageTemperatureData struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	T2mMean   float64 `json:"t2m_mean"`
 }
 
 type ClimateMaxHighData struct {
 	Lat                  float64 `json:"Lat"`
 	Long                 float64 `json:"Long"`
-	Max_Daily_High_F     float64 `json:"Max_Daily_High_F"`
+	Max_Daily_High     float64 `json:"Max_Daily_High"`
 }
 
 type ClimateMinLowData struct {
 	Lat                  float64 `json:"Lat"`
 	Long                 float64 `json:"Long"`
-	Min_Daily_Low_F     float64 `json:"Min_Daily_Low_F"`
+	Min_Daily_Low     float64 `json:"Min_Daily_Low`
 }
-
-type ClimateAvgPrecipData struct {
-	Lat                    float64 `json:"Lat"`
-	Long                   float64 `json:"Long"`
-	Avg_Daily_Precip_In    float64 `json:"Avg_Daily_Precip_In"`
-}
-
-
-func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error) {
-	url := supabaseURL + "/rest/v1/Climate Data"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+serviceKey)
-	req.Header.Set("apikey", serviceKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error executing request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response: %v", err)
-	}
-
-	var data []ClimateData
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling data: %v", err)
-	}
-
-	return data, nil
-}
-
-func getAvgTemperatures(date string) ([]ClimateAvgData, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-
-	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	query := `
-    SELECT 
-        "Lat" AS Lat,
-        "Long" AS Long,
-        AVG(( "Climate_Daily_High_F" + "Climate_Daily_Low_F" ) / 2) AS avg_temp
-    FROM 
-        "Climate Data"
-    WHERE
-        "Date" = $1
-    GROUP BY 
-        "Lat", "Long";
-`
-
-
-rows, err := db.Query(query, date)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var avgData []ClimateAvgData
-	for rows.Next() {
-		var data ClimateAvgData
-		err = rows.Scan(&data.Lat, &data.Long, &data.AvgTemp)
-		if err != nil {
-			return nil, err
-		}
-		avgData = append(avgData, data)
-	}
-
-	return avgData, nil
-}
-
-func getMaxHighTemperatures(date string) ([]ClimateMaxHighData, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	query := `
-    SELECT 
-        "Lat" AS Lat,
-        "Long" AS Long,
-        MAX("Climate_Daily_High_F") AS max_high_temp
-    FROM 
-        "Climate Data"
-    WHERE
-        "Date" = $1
-    GROUP BY 
-        "Lat", "Long";
-`
-
-	rows, err := db.Query(query, date)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var maxHighData []ClimateMaxHighData
-	for rows.Next() {
-		var data ClimateMaxHighData
-		err = rows.Scan(&data.Lat, &data.Long, &data.Max_Daily_High_F)
-		if err != nil {
-			return nil, err
-		}
-		maxHighData = append(maxHighData, data)
-	}
-
-	return maxHighData, nil
-}
-
-func getMinLowTemperatures(date string) ([]ClimateMinLowData, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	query := `
-    SELECT 
-        "Lat" AS Lat,
-        "Long" AS Long,
-        MIN("Climate_Daily_Low_F") AS min_low_temp
-    FROM 
-        "Climate Data"
-    WHERE
-        "Date" = $1
-    GROUP BY 
-        "Lat", "Long";
-`
-
-	rows, err := db.Query(query, date)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var minLowData []ClimateMinLowData
-	for rows.Next() {
-		var data ClimateMinLowData
-		err = rows.Scan(&data.Lat, &data.Long, &data.Min_Daily_Low_F)
-		if err != nil {
-			return nil, err
-		}
-		minLowData = append(minLowData, data)
-	}
-
-	return minLowData, nil
-}
-
-func getAvgPrecipitation(date string) ([]ClimateAvgPrecipData, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	query := `
-    SELECT 
-        "Lat" AS Lat,
-        "Long" AS Long,
-        AVG("Climate_Daily_Precip_In") AS avg_precip
-    FROM 
-        "Climate Data"
-    WHERE
-        "Date" = $1
-    GROUP BY 
-        "Lat", "Long";
-`
-	rows, err := db.Query(query, date)
-	if err != nil {
-   	 	return nil, err
-	}
-	defer rows.Close()
-
-	var climateData []ClimateAvgPrecipData
-	for rows.Next() {
-    	var data ClimateAvgPrecipData
-    	if err := rows.Scan(&data.Lat, &data.Long, &data.Avg_Daily_Precip_In); err != nil {
-        	return nil, err
-    	}
-    	climateData = append(climateData, data)
-	}
-	return climateData, nil
-}
-
 
 func getAllClimateData(c *gin.Context) {
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	serviceKey := os.Getenv("SERVICE_KEY")
+    // Load environment variables from .env
+    err := godotenv.Load()
+    if err != nil {
+        log.Printf("Error loading .env file: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error loading environment variables",
+        })
+        return
+    }
 
-	climateData, err := fetchDataFromSupabase(supabaseURL, serviceKey)
-	if err != nil {
-		log.Printf("Error while getting all climate data: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Error while getting all climate data",
-			"error":   err.Error(),
-		})
-		return
-	}
+    // Establish connection to the database
+    connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Printf("Error opening database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while connecting to the database",
+        })
+        return
+    }
+    defer db.Close()
 
-	c.JSON(http.StatusOK, climateData)
+    // Define the SQL query to select all columns from era5_data
+    query := `
+        SELECT 
+            time, latitude, longitude, u10_min, u10_mean, u10_max,
+            v10_min, v10_mean, v10_max, d2m_min, d2m_mean, d2m_max,
+            t2m_min, t2m_mean, t2m_max, tcc_min, tcc_mean, tcc_max,
+            mwd_mean, mwp_mean, sst_mean, swh_mean, tp_eod
+        FROM 
+            era5_data;
+    `
+
+    // Execute the query
+    rows, err := db.Query(query)
+    if err != nil {
+        log.Printf("Error querying the database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while querying the database",
+        })
+        return
+    }
+    defer rows.Close()
+
+    // Iterate over the rows and populate a slice of Era5Data
+    var allData []Era5Data
+    for rows.Next() {
+        var data Era5Data
+        err = rows.Scan(
+            &data.Time, &data.Latitude, &data.Longitude, &data.U10Min, &data.U10Mean, &data.U10Max,
+            &data.V10Min, &data.V10Mean, &data.V10Max, &data.D2mMin, &data.D2mMean, &data.D2mMax,
+            &data.T2mMin, &data.T2mMean, &data.T2mMax, &data.TccMin, &data.TccMean, &data.TccMax,
+            &data.MwdMean, &data.MwpMean, &data.SstMean, &data.SwhMean, &data.TpEod,
+        )
+        if err != nil {
+            log.Printf("Error scanning the rows: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error while scanning the database rows",
+            })
+            return
+        }
+        allData = append(allData, data)
+    }
+
+    // Return the results in JSON format
+    c.JSON(http.StatusOK, allData)
 }
 
-func getAvgClimateData(c *gin.Context) {
-    date := c.DefaultQuery("date", "2023-01-01") // defaulting to "2023-01-01" if not provided
-    avgData, err := getAvgTemperatures(date)
-	if err != nil {
-		log.Printf("Error while getting avg climate data: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Error while getting avg climate data",
-			"error":   err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, avgData)
+
+func getAvgTemperatures(c *gin.Context) {
+    // Load environment variables from .env
+    err := godotenv.Load()
+    if err != nil {
+        log.Printf("Error loading .env file: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error loading environment variables",
+        })
+        return
+    }
+
+    // Establish connection to the database
+    connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Printf("Error opening database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while connecting to the database",
+        })
+        return
+    }
+    defer db.Close()
+
+    // Prepare the SQL query with an optional WHERE clause if a time parameter is provided
+    dateTime := c.DefaultQuery("time", "")
+    var query string
+    var rows *sql.Rows
+    if dateTime != "" {
+        // Parse and format the dateTime if provided
+        parsedTime, err := time.Parse("2006-01-02 15:04:05", dateTime)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{
+                "message": "Invalid time format. Please use YYYY-MM-DD HH:MM:SS.",
+            })
+            return
+        }
+        formattedTime := parsedTime.Format("2006-01-02 15:04:05")
+
+        query = `
+            SELECT 
+                latitude,
+                longitude,
+                AVG(t2m_mean) AS t2m_mean
+            FROM 
+                era5_data
+            WHERE
+                time >= $1 AND time < $1::date + INTERVAL '1 day'
+            GROUP BY 
+                latitude, longitude;
+        `
+        rows, err = db.Query(query, formattedTime)
+    } else {
+        query = `
+            SELECT 
+                latitude,
+                longitude,
+                AVG(t2m_mean) AS t2m_mean
+            FROM 
+                era5_data
+            GROUP BY 
+                latitude, longitude;
+        `
+        rows, err = db.Query(query)
+    }
+    if err != nil {
+        log.Printf("Error querying the database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while querying the database",
+        })
+        return
+    }
+    defer rows.Close()
+
+    // Scan the results into a slice of AverageTemperatureData
+    var avgData []AverageTemperatureData
+    for rows.Next() {
+        var data AverageTemperatureData
+        if err := rows.Scan(&data.Latitude, &data.Longitude, &data.T2mMean); err != nil {
+            log.Printf("Error scanning the rows: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error while scanning the database rows",
+            })
+            return
+        }
+        avgData = append(avgData, data)
+    }
+
+    // Return the results in JSON format
+    c.JSON(http.StatusOK, avgData)
 }
 
 func getMaxHighClimateData(c *gin.Context) {
-    date := c.DefaultQuery("date", "2023-01-01")  // default to "2023-01-01" if not provided
-    maxHighData, err := getMaxHighTemperatures(date)
-	if err != nil {
-		log.Printf("Error while getting max high climate data: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Error while getting max high climate data",
-			"error":   err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, maxHighData)
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("Error loading .env file")
+    }
+
+    connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Printf("Error opening database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while connecting to the database",
+        })
+        return
+    }
+    defer db.Close()
+
+    query := `
+        SELECT 
+            latitude AS Lat,
+            longitude AS Long,
+            MAX(t2m_max) AS Max_Daily_High
+        FROM 
+            era5_data
+        GROUP BY 
+            latitude, longitude;
+    `
+
+    rows, err := db.Query(query)
+    if err != nil {
+        log.Printf("Error querying the database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while querying the database",
+        })
+        return
+    }
+    defer rows.Close()
+
+    var maxHighData []ClimateMaxHighData
+    for rows.Next() {
+        var data ClimateMaxHighData
+        err = rows.Scan(&data.Lat, &data.Long, &data.Max_Daily_High)
+        if err != nil {
+            log.Printf("Error scanning the rows: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error while scanning the database rows",
+            })
+            return
+        }
+        maxHighData = append(maxHighData, data)
+    }
+
+    c.JSON(http.StatusOK, maxHighData)
 }
 
 func getMinLowClimateData(c *gin.Context) {
-    date := c.DefaultQuery("date", "2023-01-01")  // default to "2023-01-01" if not provided
-    minLowData, err := getMinLowTemperatures(date)
-	if err != nil {
-		log.Printf("Error while getting min low climate data: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Error while getting min low climate data",
-			"error":   err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, minLowData)
-}
-
-func getAvgPrecipClimateData(c *gin.Context) {
-    date := c.DefaultQuery("date", "2023-01-01")  // default to "2023-01-01" if not provided
-    avgPrecipData, err := getAvgPrecipitation(date)
+    err := godotenv.Load()
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        log.Fatalf("Error loading .env file")
+    }
+
+    connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Printf("Error opening database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while connecting to the database",
+        })
         return
     }
-    c.JSON(http.StatusOK, avgPrecipData)
+    defer db.Close()
+
+    query := `
+        SELECT 
+            latitude AS Lat,
+            longitude AS Long,
+            MIN(t2m_min) AS Min_Daily_Low
+        FROM 
+            era5_data
+        GROUP BY 
+            latitude, longitude;
+    `
+
+    rows, err := db.Query(query)
+    if err != nil {
+        log.Printf("Error querying the database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while querying the database",
+        })
+        return
+    }
+    defer rows.Close()
+
+    var minLowData []ClimateMinLowData
+    for rows.Next() {
+        var data ClimateMinLowData
+        err = rows.Scan(&data.Lat, &data.Long, &data.Min_Daily_Low)
+        if err != nil {
+            log.Printf("Error scanning the rows: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error while scanning the database rows",
+            })
+            return
+        }
+        minLowData = append(minLowData, data)
+    }
+
+    c.JSON(http.StatusOK, minLowData)
 }
+
+func getPrecipitationData(c *gin.Context) {
+    // Load environment variables
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("Error loading .env file")
+    }
+
+    // Get the PostgreSQL connection string from environment variables
+    connStr := os.Getenv("POSTGRES_CONNECTION_STRING")
+
+    // Open a database connection
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Printf("Error opening database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while connecting to the database",
+        })
+        return
+    }
+    defer db.Close()
+
+    // Define the SQL query for fetching precipitation data
+    query := `
+        SELECT 
+            time,
+            latitude,
+            longitude,
+            tp_eod
+        FROM 
+            era5_data;
+    `
+
+    // Execute the query
+    rows, err := db.Query(query)
+    if err != nil {
+        log.Printf("Error querying the database for precipitation data: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "message": "Error while querying the database for precipitation data",
+        })
+        return
+    }
+    defer rows.Close()
+
+    // Define a slice to hold the precipitation data
+    var precipitationData []struct {
+        Time      time.Time       `json:"time"`
+        Latitude  float64         `json:"latitude"`
+        Longitude float64         `json:"longitude"`
+        TpEod     sql.NullFloat64 `json:"tp_eod,omitempty"` // End-of-day total precipitation
+    }
+
+    // Iterate over the query results
+    for rows.Next() {
+        var data struct {
+            Time      time.Time       `json:"time"`
+            Latitude  float64         `json:"latitude"`
+            Longitude float64         `json:"longitude"`
+            TpEod     sql.NullFloat64 `json:"tp_eod,omitempty"`
+        }
+        // Scan the result into the data struct
+        err = rows.Scan(&data.Time, &data.Latitude, &data.Longitude, &data.TpEod)
+        if err != nil {
+            log.Printf("Error scanning the rows for precipitation data: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error while scanning the database rows for precipitation data",
+            })
+            return
+        }
+        // Append the data to the slice
+        precipitationData = append(precipitationData, data)
+    }
+
+    // Return the precipitation data as JSON
+    c.JSON(http.StatusOK, precipitationData)
+}
+
+
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -371,12 +444,10 @@ func main() {
 	router.Use(cors.New(config))
 
 	router.GET("/api/climate/", getAllClimateData)
-
-	router.GET("api/climate/avg", getAvgClimateData)
+	router.GET("api/climate/avg", getAvgTemperatures)
 	router.GET("/api/climate/max-high", getMaxHighClimateData)
 	router.GET("/api/climate/min-low", getMinLowClimateData)
-	router.GET("/api/climate/avg-precip", getAvgPrecipClimateData)
-
+	router.GET("/api/climate/precipitation", getPrecipitationData)
 
 	router.Run(":4000")
 }
