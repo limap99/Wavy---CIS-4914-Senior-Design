@@ -142,6 +142,7 @@ type TotalCloudCoverData struct {
     Mean_Total_Cloud_Cover sql.NullFloat64 `json:"mean_total_cloud_cover"`
 }
 
+/*
 // getAllClimateData retrieves all climate data from the database and sends it as JSON.
 func getAllClimateData(c *gin.Context) {
     // Define the query to select all climate data
