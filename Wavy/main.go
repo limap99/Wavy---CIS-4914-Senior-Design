@@ -127,21 +127,12 @@ type SeaWaveHeightData struct {
 }
 
 type WindSpeed struct {
-    Time      time.Time `json:"time"`
-    Latitude  float64   `json:"latitude"`
-    Longitude float64   `json:"longitude"`
-    U10Mean   float64   `json:"u10_mean"`
-    V10Mean   float64   `json:"v10_mean"`
+    Time                time.Time `json:"time"`
+    Latitude            float64   `json:"latitude"`
+    Longitude           float64   `json:"longitude"`
+    WindDirectionMean   float64   `json:"wind_direction_mean"`
+    WindSpeedMean       float64   `json:"wind_speed_mean"`
 }
-
-/*
-type WindSpeedAggregate struct {
-    Time       time.Time `json:"time"`
-    Latitude   float64   `json:"latitude"`
-    Longitude  float64   `json:"longitude"`
-    AvgU10Mean float64   `json:"avg_u10_mean"` // Average of U10 wind component
-    AvgV10Mean float64   `json:"avg_v10_mean"` // Average of V10 wind component
-}*/
 
 
 // SeaWaveHeightData defines the JSON format for sea wave height response
@@ -151,7 +142,6 @@ type TotalCloudCoverData struct {
     Mean_Total_Cloud_Cover sql.NullFloat64 `json:"mean_total_cloud_cover"`
 }
 
-/*
 // getAllClimateData retrieves all climate data from the database and sends it as JSON.
 func getAllClimateData(c *gin.Context) {
     // Define the query to select all climate data
@@ -370,7 +360,6 @@ func getPrecipitationData(c *gin.Context) {
 }
 
 
-/*
 func getWindSpeedGroupedByLocation(c *gin.Context) {
     dateTime := c.Query("time")
     if dateTime == "" {
@@ -398,10 +387,10 @@ func getWindSpeedGroupedByLocation(c *gin.Context) {
     }
     defer rows.Close()
 
-    var results []WindSpeedAggregate
+    var results []WindSpeed
     for rows.Next() {
-        var data WindSpeedAggregate
-        err := rows.Scan(&data.Time, &data.Latitude, &data.Longitude, &data.AvgU10Mean, &data.AvgV10Mean)
+        var data WindSpeed
+        err := rows.Scan(&data.Time, &data.Latitude, &data.Longitude, &data.WindDirectionMean, &data.WindSpeedMean)
         if err != nil {
             log.Printf("Error scanning the rows for wind speed data: %v", err)
             c.JSON(http.StatusInternalServerError, gin.H{
@@ -413,8 +402,7 @@ func getWindSpeedGroupedByLocation(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, results)
-}*/
-
+}
 
 
 
@@ -550,7 +538,7 @@ func main() {
 	router.GET("/api/climate/max-high", getMaxHighClimateData)
 	router.GET("/api/climate/min-low", getMinLowClimateData)
 	router.GET("/api/climate/precipitation", getPrecipitationData)
-   // router.GET("/api/climate/windspeed", getWindSpeedGroupedByLocation)
+   router.GET("/api/climate/windspeed", getWindSpeedGroupedByLocation)
     router.GET("/api/climate/waveheight", getMeanSeaWaveHeightData)
     router.GET("/api/climate/cloudcover", getMeanCloudCoverData)
 
