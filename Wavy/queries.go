@@ -63,7 +63,6 @@ const QueryPrecipitationData = `
         time, latitude, longitude;
 `
 
-/*
 const QueryWindSpeedGroupedByLocation = `
     SELECT 
         time, latitude, longitude, AVG(u10_mean) AS avg_u10_mean, AVG(v10_mean) AS avg_v10_mean
@@ -73,7 +72,7 @@ const QueryWindSpeedGroupedByLocation = `
         time = $1
     GROUP BY
         time, latitude, longitude;
-`*/
+`
 
 const QueryMeanSeaWaveHeight = `
     SELECT 
