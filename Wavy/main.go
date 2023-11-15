@@ -406,7 +406,6 @@ func getWindSpeedGroupedByLocation(c *gin.Context) {
 }
 
 
-
 func getMeanSeaWaveHeightData(c *gin.Context) {
     // Extract the 'time' query parameter
     dateTime := c.Query("time") // using Query instead of DefaultQuery to make 'time' a mandatory parameter
@@ -516,6 +515,126 @@ func getMeanCloudCoverData(c *gin.Context) {
 }
 
 
+func getAvgTemperaturesAverage(c *gin.Context) {
+    query := QueryAvgTemperaturesAverage
+    rows, err := db.Query(query)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+    defer rows.Close()
+
+    var avgData []AverageTemperatureData
+    for rows.Next() {
+        var data AverageTemperatureData
+        if err = rows.Scan(&data.Latitude, &data.Longitude, &data.T2mMean); err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error while scanning the database rows", err)
+            return
+        }
+        avgData = append(avgData, data)
+    }
+
+    c.JSON(http.StatusOK, avgData)
+}
+
+func getMaxHighClimateDataAverage(c *gin.Context) {
+    query := QueryMaxHighClimateDataAverage
+    rows, err := db.Query(query)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+    defer rows.Close()
+
+    var maxHighData []ClimateMaxHighData
+    for rows.Next() {
+        var data ClimateMaxHighData
+        if err = rows.Scan(&data.Lat, &data.Long, &data.Max_Daily_High); err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+            return
+        }
+        maxHighData = append(maxHighData, data)
+    }
+
+    c.JSON(http.StatusOK, maxHighData)
+}
+
+func getMinLowClimateDataAverage(c *gin.Context) {
+    query := QueryMinLowClimateDataAverage
+    rows, err := db.Query(query)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+    defer rows.Close()
+
+    var minLowData []ClimateMinLowData
+    for rows.Next() {
+        var data ClimateMinLowData
+        if err = rows.Scan(&data.Lat, &data.Long, &data.Min_Daily_Low); err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+            return
+        }
+        minLowData = append(minLowData, data)
+    }
+
+    c.JSON(http.StatusOK, minLowData)
+}
+
+func getPrecipitationDataAverage(c *gin.Context) {
+    rows, err := db.Query(QueryPrecipitationDataAverage)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+    defer rows.Close()
+
+    var precipitationDataSlice []precipitationData
+    for rows.Next() {
+        var data precipitationData
+        if err = rows.Scan(&data.Time, &data.Lat, &data.Long, &data.TpEod); err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+            return
+        }
+        precipitationDataSlice = append(precipitationDataSlice, data)
+    }
+
+    if err = rows.Err(); err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error iterating over the results", err)
+        return
+    }
+
+    c.JSON(http.StatusOK, precipitationDataSlice)
+}
+
+func getWindSpeedGroupedByLocationAverage(c *gin.Context) {
+    rows, err := db.Query(QueryWindSpeedGroupedByLocationAverage)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+    defer rows.Close()
+
+    var results []WindSpeed
+    for rows.Next() {
+        var data WindSpeed
+        err := rows.Scan(&data.Latitude, &data.Longitude, &data.WindDirectionMean, &data.WindSpeedMean)
+        if err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+            return
+        }
+        results = append(results, data)
+    }
+
+    if err = rows.Err(); err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error iterating over the results", err)
+        return
+    }
+
+    c.JSON(http.StatusOK, results)
+}
+
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
@@ -535,13 +654,21 @@ func main() {
 	router.Use(cors.New(config))
 
 	//router.GET("/api/climate/", getAllClimateData)
-	router.GET("api/climate/avg", getAvgTemperatures)
-	router.GET("/api/climate/max-high", getMaxHighClimateData)
-	router.GET("/api/climate/min-low", getMinLowClimateData)
-	router.GET("/api/climate/precipitation", getPrecipitationData)
-   router.GET("/api/climate/windspeed", getWindSpeedGroupedByLocation)
+    router.GET("api/climate/avg", getAvgTemperatures) 
+    router.GET("/api/climate/max-high", getMaxHighClimateData)
+    router.GET("/api/climate/min-low", getMinLowClimateData)
+    router.GET("/api/climate/precipitation", getPrecipitationData)
+    router.GET("/api/climate/windspeed", getWindSpeedGroupedByLocation)
     router.GET("/api/climate/waveheight", getMeanSeaWaveHeightData)
     router.GET("/api/climate/cloudcover", getMeanCloudCoverData)
+
+
+    router.GET("/api/climate/temp-40-avg", getAvgTemperaturesAverage)
+    router.GET("/api/climate/max-high-40-avg", getMaxHighClimateDataAverage)
+    router.GET("/api/climate/min-low-40-avg", getMinLowClimateDataAverage)
+    router.GET("/api/climate/precipitation-40-avg", getPrecipitationDataAverage)
+    router.GET("/api/climate/windspeed-40-avg", getWindSpeedGroupedByLocationAverage)
+
 
 	router.Run(":4000")
 }
