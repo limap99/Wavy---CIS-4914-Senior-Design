@@ -1,119 +1,128 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"strings"
-	"time"
+    "database/sql"
+    "fmt"
+    "log"
+    "net/http"
+    "os"
+    "time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    _ "github.com/lib/pq" // PostgreSQL driver
+    "github.com/joho/godotenv"
 )
 
 type JSONDate struct {
-	time.Time
+    time.Time
 }
 
-func (jd *JSONDate) UnmarshalJSON(b []byte) error {
-	s := strings.Trim(string(b), "\"")
-	t, err := time.Parse("2006-01-02", s)
-	if err != nil {
-		return err
-	}
-	jd.Time = t
-	return nil
+type TemperatureData struct {
+    Time     sql.NullTime `json:"time"`
+    Latitude sql.NullFloat64 `json:"latitude"`
+    Longitude sql.NullFloat64 `json:"longitude"`
+    T2mMin   sql.NullFloat64 `json:"t2m_min"`
+    T2mMean  sql.NullFloat64 `json:"t2m_mean"`
+    T2mMax   sql.NullFloat64 `json:"t2m_max"`
 }
 
-type ClimateData struct {
-	Lat                   float64   `json:"Lat"`
-	Long                  float64   `json:"Long"`
-	Climate_Daily_High_F  float64   `json:"Climate_Daily_High_F"`
-	Climate_Daily_Low_F   float64   `json:"Climate_Daily_Low_F"`
-	Climate_Daily_Precip_In float64 `json:"Climate_Daily_Precip_In"`
-	Date                  JSONDate  `json:"Date"`
+func getTempData(c *gin.Context) {
+    lat := c.Query("lat")
+    long := c.Query("long")
+    date := c.Query("date")
+
+    // Check if all parameters are empty
+    if lat == "" && long == "" && date == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"message": "No parameters provided. Please provide lat, long, or date."})
+        return
+    }
+
+    connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=require",
+        os.Getenv("DB_USER"),
+        os.Getenv("DB_PASSWORD"),
+        os.Getenv("DB_NAME"),
+        os.Getenv("DB_HOST"),
+        os.Getenv("DB_PORT"),
+    )
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    var sqlStatement string
+    var rows *sql.Rows
+
+    // Adjust the SQL query based on the provided parameters
+    if lat != "" && long != "" && date != "" {
+        // Fetch data for specific latitude, longitude, and date
+        sqlStatement = `SELECT time, latitude, longitude, t2m_min, t2m_mean, t2m_max 
+                        FROM era5_refined 
+                    WHERE latitude = $1 AND longitude = $2 AND DATE(time) = $3`
+        rows, err = db.Query(sqlStatement, lat, long, date)
+    }
+
+    if err != nil {
+        log.Printf("Query failed: %v; SQL Statement: %s\n", err, sqlStatement)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed", "details": err.Error()})
+        return
+    }
+    defer rows.Close()
+
+    var temps []TemperatureData
+    for rows.Next() {
+        var temp TemperatureData
+        if err := rows.Scan(&temp.Time, &temp.Latitude, &temp.Longitude, &temp.T2mMin, &temp.T2mMean, &temp.T2mMax); err != nil {
+            log.Printf("Failed to scan row: %v\n", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to scan row", "details": err.Error()})
+            return
+        }
+        temps = append(temps, temp)
+    }
+
+    if err = rows.Err(); err != nil {
+        log.Printf("Error iterating rows: %v\n", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "error iterating rows"})
+        return
+    }
+    // Send the result back
+    c.JSON(http.StatusOK, temps)
 }
 
-func fetchDataFromSupabase(supabaseURL, serviceKey string) ([]ClimateData, error) {
-	url := supabaseURL + "/rest/v1/Climate Data"
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
-	}
+func CORSMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+        c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+        c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+        c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
 
-	req.Header.Set("Authorization", "Bearer "+serviceKey)
-	req.Header.Set("apikey", serviceKey)
-	req.Header.Set("Content-Type", "application/json")
+        // Handle preflight requests
+        if c.Request.Method == "OPTIONS" {
+            c.AbortWithStatus(http.StatusNoContent)
+            return
+        }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error executing request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response: %v", err)
-	}
-
-	// Print raw response for debugging
-	fmt.Println("Response from Supabase:", string(body))
-
-	// Check the HTTP status code
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Error Response from Supabase:", string(body))
-		return nil, fmt.Errorf("unexpected status code: %v", resp.Status)
-	}
-
-	var data []ClimateData
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling data: %v", err)
-	}
-
-	return data, nil
-}
-
-func getAllClimateData(c *gin.Context) {
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	serviceKey := os.Getenv("SERVICE_KEY")
-
-	climateData, err := fetchDataFromSupabase(supabaseURL, serviceKey)
-	if err != nil {
-		log.Printf("Error while getting all climate data: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Error while getting all climate data",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, climateData)
+        c.Next()
+    }
 }
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found")
+    }
 
-	serviceKey := os.Getenv("SERVICE_KEY")
-	supabaseURL := os.Getenv("SUPABASE_URL")
+    router := gin.Default()
 
-	if serviceKey == "" || supabaseURL == "" {
-		log.Fatalf("Environment variables not set correctly")
-	}
+    // Apply the CORS middleware to the router
+    router.Use(CORSMiddleware())
 
-	router := gin.Default()
+    // Setup the route for your API
+    router.GET("/api/climate/", getTempData)
 
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
-	router.Use(cors.New(config))
-
-	router.GET("/api/climate/", getAllClimateData)
-	router.Run(":4000")
+    // Start the server on port 4000
+    err := router.Run(":4000")
+    if err != nil {
+        log.Fatal("Error starting the server: ", err)
+    }
 }
