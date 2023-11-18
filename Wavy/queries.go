@@ -26,6 +26,16 @@ const QueryAvgTemperatures = `
         latitude, longitude;
 `
 
+const QueryLatitudeLongitude = `
+    SELECT
+        latitude, 
+        longitude
+    FROM 
+        era5_refined
+    GROUP BY 
+        latitude, longitude
+`
+
 const QueryMaxHighClimateData = `
     SELECT 
         latitude AS Lat,
