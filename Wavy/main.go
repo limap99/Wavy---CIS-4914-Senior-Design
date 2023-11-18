@@ -142,6 +142,11 @@ type TotalCloudCoverData struct {
     Mean_Total_Cloud_Cover sql.NullFloat64 `json:"mean_total_cloud_cover"`
 }
 
+type AllCoordinates struct {
+    Lat                 float64        `json:"lat"`
+    Long                float64        `json:"long"`
+}
+
 /*
 // getAllClimateData retrieves all climate data from the database and sends it as JSON.
 func getAllClimateData(c *gin.Context) {
@@ -634,6 +639,29 @@ func getWindSpeedGroupedByLocationAverage(c *gin.Context) {
     c.JSON(http.StatusOK, results)
 }
 
+func getAllCoordinates(c *gin.Context) { 
+    query := QueryLatitudeLongitude
+    rows, err := db.Query(query)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+    defer rows.Close()
+
+    var allCoordinates []AllCoordinates
+    for rows.Next() {
+        var data AllCoordinates
+        if err = rows.Scan(&data.Lat, &data.Long); err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+            return
+        }
+        allCoordinates = append(allCoordinates, data)
+    }
+
+    c.JSON(http.StatusOK, allCoordinates)
+}
+
+
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -654,14 +682,14 @@ func main() {
 	router.Use(cors.New(config))
 
 	//router.GET("/api/climate/", getAllClimateData)
-    router.GET("api/climate/avg", getAvgTemperatures) 
-    router.GET("/api/climate/max-high", getMaxHighClimateData)
-    router.GET("/api/climate/min-low", getMinLowClimateData)
-    router.GET("/api/climate/precipitation", getPrecipitationData)
+	router.GET("api/climate/avg", getAvgTemperatures)
+	router.GET("/api/climate/max-high", getMaxHighClimateData)
+	router.GET("/api/climate/min-low", getMinLowClimateData)
+	router.GET("/api/climate/precipitation", getPrecipitationData)
     router.GET("/api/climate/windspeed", getWindSpeedGroupedByLocation)
     router.GET("/api/climate/waveheight", getMeanSeaWaveHeightData)
     router.GET("/api/climate/cloudcover", getMeanCloudCoverData)
-
+    router.GET("api/climate/allcoordinates", getAllCoordinates)
 
     router.GET("/api/climate/temp-40-avg", getAvgTemperaturesAverage)
     router.GET("/api/climate/max-high-40-avg", getMaxHighClimateDataAverage)
