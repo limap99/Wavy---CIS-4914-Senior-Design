@@ -3,11 +3,12 @@ import L, { rectangle } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FloridaCountiesData } from '../data/FloridaCountiesData';
 import * as turf from '@turf/turf';
-import { grids, coordinatesToBeQueried } from '../data/gridData';
+import { grids } from '../data/gridData';
 import TemperatureRect from './TemperatureRect';
 import ReactDOM from 'react-dom';
 import PrecipitationRect from './PrecipitationRect';
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import { format } from 'date-fns';
+import AutoDateComponent from './AutoDateComponent';
 
 import DatePickerComponent from './DatePickerComponent';
 
@@ -18,25 +19,38 @@ import DatePickerComponent from './DatePickerComponent';
  
  
 const WeatherMap = () => { 
+
     
     const [currentMetric, setCurrentMetric] = useState('avg_temp');
-
+    const [selectedDate, setSelectedDate] = useState(new Date(2022, 0, 1));
     const [data, setData] = useState(null);
     const [dataLoaded, setDataLoad] = useState(false);
 
- 
-   // alert(coordinatesToBeQueried.length)
 
-   console.log(coordinatesToBeQueried[0])
-
-    // coordinatesToBeQueried.forEach(coordinates => {
-    //   console.log(coordinates);
-    // });
   let map = null
   
 
-
+  let metricsLayer = null;
    
+
+  const getApiUrl = (metric, date) => {
+    switch (metric) {
+      case 'avg_temp':
+        return `http://localhost:4000/api/climate/avg?time=${date} 00:00:00`;
+      case 'min_temp':
+        return `http://localhost:4000/api/climate/min-low?time=${date} 00:00:00`;
+      case 'max_temp':
+        return `http://localhost:4000/api/climate/max-high?time=${date} 00:00:00`;
+      default:
+        return `http://localhost:4000/api/climate/avg?time=${date}00:00:00`;
+    }
+  };
+
+
+  const onDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
   
 
 
@@ -55,24 +69,24 @@ const WeatherMap = () => {
         } 
         else if (currentMetric === 'min_temp') {
             // ... your existing temperature colors logic
-            return value > 100 ? '#800026' : // Very hot
-              value > 85 ? '#BD0026' : // Hot
+            return value > 90 ? '#800026' : // Very hot
+              value > 80 ? '#BD0026' : // Hot
               value > 70 ? '#E31A1C' : // Warm
-              value> 55 ? '#FC4E2A' :
-              value > 40 ? '#FD8D3C' :
-              value > 25  ? '#FEB24C' :
-              value> 10 ? '#FED976' :
+              value> 60 ? '#FC4E2A' :
+              value > 50 ? '#FD8D3C' :
+              value > 40  ? '#FEB24C' :
+              value> 30 ? '#FED976' :
                           '#d8a6268c';
         }
         if (currentMetric === 'max_temp') {
             // ... your existing temperature colors logic
-            return value > 100 ? '#800026' : // Very hot
-              value > 85 ? '#BD0026' : // Hot
+            return value > 90 ? '#800026' : // Very hot
+              value > 80 ? '#BD0026' : // Hot
               value > 70 ? '#E31A1C' : // Warm
-              value> 55 ? '#FC4E2A' :
-              value > 40 ? '#FD8D3C' :
-              value > 25  ? '#FEB24C' :
-              value> 10 ? '#FED976' :
+              value> 60 ? '#FC4E2A' :
+              value > 50 ? '#FD8D3C' :
+              value > 40  ? '#FEB24C' :
+              value> 30 ? '#FED976' :
                           '#d8a6268c';
           }
         else if (currentMetric === 'precipitation') {
@@ -179,29 +193,6 @@ const WeatherMap = () => {
         layer.redraw();
         
     };
-
-    const propagateClick = (e) => {
-      // Check if the event has a custom property indicating it's been propagated
-      if (e._propagated) return;
-    
-      const layerElement = e.target._path;
-      if (layerElement) {
-          layerElement.style.pointerEvents = 'none';
-          const newClick = new MouseEvent('click', {
-              bubbles: true,
-              cancelable: true,
-              view: window
-          });
-    
-          // Add a custom property to the new event
-          newClick._propagated = true;
-    
-          e.originalEvent.target.dispatchEvent(newClick);
-          setTimeout(() => {
-              layerElement.style.pointerEvents = '';
-          }, 10);
-      }
-    };
     
     
     const showPopup = (e, layer) => {
@@ -236,75 +227,51 @@ const WeatherMap = () => {
 
 
   useEffect(() => {
-
-    fetch('http://localhost:4000/api/climate/')
+    let formattedDate = format(selectedDate, 'yyyy-MM-dd')
+    let api_url = getApiUrl(currentMetric, formattedDate);
+    fetch(api_url)
             .then(response => response.json())
-            .then(data => setData(data))
-            .then(dataLoaded => setDataLoad(true))
+            .then(data => {
+              setData(data);
+              setDataLoad(true);
+              for(let i = 0; i < grids.length; i++){
+              for(let j = 0; j < data.length; j++)
+                if(grids[i].gridCenter[0] === data[j].Long && grids[i].gridCenter[1] === data[j].Lat){
+                  let metricValue = Object.values(data[j])[2]
+                  grids[i].properties[currentMetric]= metricValue 
+                  break; 
+                }
+                
+                
+               
+              }
+
+              metricsLayer = L.geoJSON(turf.featureCollection(grids), {
+                style: style,
+            }).addTo(map);
+          
+            geoJsonLayer = L.geoJSON(FloridaCountiesData, {
+              style: countyStyle,
+              onEachFeature: onEachFeature,
+          }).addTo(map);
+
+          map.on('click', function(e) {
+            const clickedPoint = turf.point([e.latlng.lng, e.latlng.lat]);
+            metricsLayer.eachLayer(layer => {
+                if (turf.booleanPointInPolygon(clickedPoint, layer.feature)) {
+                    showPopup(e, layer);
+                }
+            });
+        });
+        
+
+            })
+
+
+
+            // .then(dataLoaded => setDataLoad(true))
             .catch(error => console.error('Error fetching data:', error));
-    
-
-    for(let i = 0; i < 255; i++){
-      grids[i].properties.avg_temp = 57
-  }
-
-  // for(let i = 100; i < 300; i++){
-  //     grids[i].properties.avg_temp = 10
-  // }
-
-  // for(let i = 300; i < 500; i++){
-  //     grids[i].properties.avg_temp = 25
-  // }
-
-//   for(let i = 500; i < 700; i++){
-//       grids[i].properties.avg_temp = 40
-//   }
-
-//   for(let i = 700; i < 900; i++){
-//       if(i <= 800)
-//           grids[i].properties.avg_temp = 55
-//       else
-//       grids[i].properties.avg_temp =110
-//   }
-
-//   for(let i = 900; i < 1200; i++){
-//       grids[i].properties.avg_temp = 70
-//   }
-
-//   for(let i = 1200; i < grids.length; i++){
-//       grids[i].properties.avg_temp = 95
-//   }
-
-// //   for(let i = 0; i < grids.length; i++){
-// //     grids[i].properties.min_temp = data.Climate_Daily_Low_F;
-// // }
-
   
-  // for(let i = 0; i < grids.length; i++){
-  //   if(dataLoaded){
-  //     grids[i].properties.min_temp = data[1].Climate_Daily_Low_F;
-  //     grids[i].properties.max_temp = data[1].Climate_Daily_High_F;
-  //     grids[i].properties.precipitation = data[1].Climate_Daily_Precip_In;
-  //   }
-     
-     
-  // }
-
-  // for(let i = 0; i < data.length; i++){
-  //   if(dataLoaded){
-  //     grids[i].properties.min_temp = data[i].Climate_Daily_Low_F;
-  //     grids[i].properties.max_temp = data[i].Climate_Daily_High_F;
-  //     grids[i].properties.precipitation = data[i].Climate_Daily_Precip_In;
-  //   }
-     
-     
-  // }
- 
-
-    // // Initialize the map
-    //let map = null;
-
-    
     
     
     let geoJsonLayer = null;
@@ -361,34 +328,6 @@ const WeatherMap = () => {
 
       info.addTo(map);
 
-      let metricsLayer = null;
-
-
-
-    //   geoJsonLayer = L.geoJSON(turf.featureCollection(grids), {
-    //     style: style,
-    // }).bindPopup(function (layer) {
-    //   return `${layer.feature.properties.avg_temp}°F`;
-    //   }).addTo(map);
-
-    //   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-    //     style: countyStyle,
-    //     onEachFeature: onEachFeature,
-    // }).bindPopup(function (layer) {
-    //   return `${layer.feature.properties[currentMetric]}°F`;
-    //   }).addTo(map);
-
-    //   metricsLayer = L.geoJSON(turf.featureCollection(grids), {
-    //     style: gridStyle,
-    //     onEachFeature: onEachFeatureGrid,
-    // }).bindPopup(function (layer) {
-    //   if(currentMetric === "precipitation"){
-    //     return `${layer.feature.properties[currentMetric]} in`;
-    //   }
-    //   else{
-    //     return `${layer.feature.properties[currentMetric]}°F`;
-    //   }
-    //   }).addTo(map);
 
       
 
@@ -409,17 +348,6 @@ const WeatherMap = () => {
         }
     });
 });
-
-
-
-
-  //   geoJsonLayer.eachLayer(function (layer) {
-  //     layer.getElement().style.pointerEvents = 'none';
-  // });
-
-   
-
-
       
     
 
@@ -506,6 +434,18 @@ const WeatherMap = () => {
         if(currentMetric === 'precipitation'){
           container.appendChild(precipitationRectComponent);
         }
+
+        else if(currentMetric === 'avg_temp'){
+          container.appendChild(temperatureRectComponent);
+         // api_url = 'http://localhost:4000/api/climate/avg?time=2022-12-01 00:00:00';
+
+        }
+
+        else if(currentMetric === 'min_temp'){
+          container.appendChild(temperatureRectComponent);
+         // api_url = 'http://localhost:4000/api/climate/min-low?time=2022-12-01 00:00:00';
+
+        }
         
         else{
           container.appendChild(temperatureRectComponent);
@@ -534,7 +474,8 @@ const WeatherMap = () => {
         
         
         // Render the TemperatureRect component inside the div
-        ReactDOM.render(<DatePickerComponent />, DateSelectorComponent);
+        ReactDOM.render(<DatePickerComponent selectedDate={selectedDate} 
+          onDateChange={onDateChange} />, DateSelectorComponent);
         
     
         container.appendChild(DateSelectorComponent);
@@ -547,11 +488,32 @@ const WeatherMap = () => {
         }
       });
 
+      const AutoDateControl = L.Control.extend({
+        options: {
+            position: 'topleft' // You can adjust the position as needed
+        },
+    
+        onAdd: function() {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+            
+            // Create a div element to render the AutoAdvanceDate component
+            const autoDateComponent = document.createElement('div');
+    
+            // Render the AutoAdvanceDate component inside the div
+            ReactDOM.render(<AutoDateComponent selectedDate={selectedDate} onDateChange={onDateChange} />, autoDateComponent );
+    
+            container.appendChild(autoDateComponent );
+    
+            return container;
+        }
+    });
+
 
       
       
      map.addControl(new customControl());
      map.addControl(new DateSelector());
+     map.addControl(new AutoDateControl());
      map.addControl(new tempMeter());
     //  map.addControl(new DateSelector());
 
@@ -574,15 +536,19 @@ const WeatherMap = () => {
         map.remove();
       }
     };
-  }, [currentMetric]);
+  }, [currentMetric, selectedDate]);
 
-  console.log(data)
-  console.log(coordinatesToBeQueried)
-  
+
+
+//   coordinatesToBeQueried.forEach(coordPair => {
+//     console.log(coordPair.join(','));
+// });
+
+
 
   return (
     <div id="map" style={{ height: '100%', width: '100%' }}>
-    
+      
     </div>
   );
 }
