@@ -95,8 +95,8 @@ type Era5Data struct {
 
 
 type AverageTemperatureData struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Lat  float64 `json:"Lat"`
+	Long float64 `json:"Long"`
 	T2mMean   float64 `json:"t2m_mean"`
 }
 
@@ -114,22 +114,22 @@ type ClimateMinLowData struct {
 
 type precipitationData struct {
     Time  time.Time       `json:"time"`
-    Lat   float64         `json:"latitude"`
-    Long  float64         `json:"longitude"`
-    TpEod sql.NullFloat64 `json:"tp_eod,omitempty"` // End-of-day total precipitation
+    Lat   float64         `json:"Lat"`
+    Long  float64         `json:"Long"`
+    TpSum float64 `json:"tp_sum"` // End-of-day total precipitation
 }
 
 // SeaWaveHeightData defines the JSON format for sea wave height response
 type SeaWaveHeightData struct {
-    Lat                 float64       `json:"lat"`
-    Long                float64       `json:"long"`
-    Mean_Sea_Wave_Height sql.NullFloat64 `json:"mean_sea_wave_height,omitempty"`
+    Lat                 float64       `json:"Lat"`
+    Long                float64       `json:"Long"`
+    Mean_Sea_Wave_Height float64 `json:"mean_sea_wave_height,omitempty"`
 }
 
 type WindSpeed struct {
     Time                time.Time `json:"time"`
-    Latitude            float64   `json:"latitude"`
-    Longitude           float64   `json:"longitude"`
+    Latitude            float64   `json:"Lat"`
+    Longitude           float64   `json:"Long"`
     WindDirectionMean   float64   `json:"wind_direction_mean"`
     WindSpeedMean       float64   `json:"wind_speed_mean"`
 }
@@ -137,51 +137,17 @@ type WindSpeed struct {
 
 // SeaWaveHeightData defines the JSON format for sea wave height response
 type TotalCloudCoverData struct {
-    Lat                 float64       `json:"lat"`
-    Long                float64       `json:"long"`
-    Mean_Total_Cloud_Cover sql.NullFloat64 `json:"mean_total_cloud_cover"`
+    Lat                 float64       `json:"Lat"`
+    Long                float64       `json:"Long"`
+    Mean_Total_Cloud_Cover float64`json:"mean_total_cloud_cover"`
 }
 
 type AllCoordinates struct {
-    Lat                 float64        `json:"lat"`
-    Long                float64        `json:"long"`
+    Lat                 float64        `json:"Lat"`
+    Long                float64        `json:"Long"`
 }
 
-/*
-// getAllClimateData retrieves all climate data from the database and sends it as JSON.
-func getAllClimateData(c *gin.Context) {
-    // Define the query to select all climate data
     
-    // Execute the query
-    rows, err := db.Query(QuerySelectAllClimateData)
-    if err != nil {
-        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
-        return
-    }
-    defer rows.Close()
-
-    // Iterate over the rows and populate a slice of Era5Data
-    var allData []Era5Data
-    for rows.Next() {
-        var data Era5Data
-        // Assume Era5Data has fields that correspond to the columns selected in the query
-        if err := rows.Scan(&data.Time, &data.Latitude, &data.Longitude, &data.U10Min, &data.U10Mean, &data.U10Max, &data.V10Min, &data.V10Mean, &data.V10Max, &data.D2mMin, &data.D2mMean, &data.D2mMax, &data.T2mMin, &data.T2mMean, &data.T2mMax, &data.TccMin, &data.TccMean, &data.TccMax, &data.MwdMean, &data.MwpMean, &data.SstMean, &data.SwhMean, &data.TpEod); err != nil {
-            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
-            return
-        }
-        allData = append(allData, data)
-    }
-
-    // Check for errors from iterating over rows
-    if err = rows.Err(); err != nil {
-        respondWithError(c, http.StatusInternalServerError, "Error while iterating over rows", err)
-        return
-    }
-
-    // Return the results in JSON format
-    c.JSON(http.StatusOK, allData)
-}*/
-
 func getAvgTemperatures(c *gin.Context) {
     // Prepare the SQL query with an optional WHERE clause if a time parameter is provided
     dateTime := c.DefaultQuery("time", "")
@@ -199,10 +165,10 @@ func getAvgTemperatures(c *gin.Context) {
         }
         formattedTime := parsedTime.Format("2006-01-02 15:04:05")
 
-        queryAvgTemperatures = "SELECT latitude, longitude, AVG(t2m_mean) FROM era5_refined WHERE time = $1 GROUP BY latitude, longitude" // Replace with your actual query
+        queryAvgTemperatures = "SELECT latitude AS Lat, longitude AS Long, ROUND(AVG(t2m_mean), 1) AS t2m_mean FROM era5_refined WHERE time = $1 GROUP BY latitude, longitude"
         rows, err = db.Query(queryAvgTemperatures, formattedTime)
     } else {
-        queryAvgTemperatures = "SELECT latitude, longitude, AVG(t2m_mean) FROM era5_refined GROUP BY latitude, longitude" // Replace with your actual query
+        queryAvgTemperatures = "SELECT latitude AS Lat, longitude AS Long, ROUND(AVG(t2m_mean), 1) AS t2m_mean FROM era5_refined GROUP BY latitude, longitude"
         rows, err = db.Query(queryAvgTemperatures)
     }
 
@@ -216,7 +182,7 @@ func getAvgTemperatures(c *gin.Context) {
     var avgData []AverageTemperatureData
     for rows.Next() {
         var data AverageTemperatureData
-        if err = rows.Scan(&data.Latitude, &data.Longitude, &data.T2mMean); err != nil {
+        if err = rows.Scan(&data.Lat, &data.Long, &data.T2mMean); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error while scanning the database rows", err)
             return
         }
@@ -226,6 +192,7 @@ func getAvgTemperatures(c *gin.Context) {
     // Return the results in JSON format
     c.JSON(http.StatusOK, avgData)
 }
+
 
 func getMaxHighClimateData(c *gin.Context) {
 	// Extract the 'time' query parameter
@@ -347,10 +314,17 @@ func getPrecipitationData(c *gin.Context) {
     var precipitationDataSlice []precipitationData
     for rows.Next() {
         var data precipitationData
-        if err = rows.Scan(&data.Time, &data.Lat, &data.Long, &data.TpEod); err != nil {
+        var tpSum sql.NullFloat64 // Use a temporary NullFloat64 variable
+
+        if err = rows.Scan(&data.Time, &data.Lat, &data.Long, &tpSum); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
             return
         }
+
+        if tpSum.Valid {
+            data.TpSum = tpSum.Float64 // Only set TpSum if it's valid
+        }
+
         precipitationDataSlice = append(precipitationDataSlice, data)
     }
 
@@ -445,13 +419,20 @@ func getMeanSeaWaveHeightData(c *gin.Context) {
     var meanWaveData []SeaWaveHeightData
     for rows.Next() {
         var data SeaWaveHeightData
-if err = rows.Scan(&data.Lat, &data.Long, &data.Mean_Sea_Wave_Height); err != nil {
-    log.Printf("Error scanning the rows for sea wave height data: %v", err)
-    c.JSON(http.StatusInternalServerError, gin.H{
-        "message": "Error while scanning the database rows for sea wave height data",
-    })
-    return
-}
+        var meanWaveHeight sql.NullFloat64 // Temporary variable for scanning
+
+        if err = rows.Scan(&data.Lat, &data.Long, &meanWaveHeight); err != nil {
+            log.Printf("Error scanning the rows for sea wave height data: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error while scanning the database rows for sea wave height data",
+            })
+            return
+        }
+
+        if meanWaveHeight.Valid {
+            data.Mean_Sea_Wave_Height = meanWaveHeight.Float64 // Assign if valid
+        }
+
         meanWaveData = append(meanWaveData, data)
     }
 
@@ -479,20 +460,6 @@ func getMeanCloudCoverData(c *gin.Context) {
     }
     formattedTime := parsedTime.Format("2006-01-02 15:04:05")
 
-    // Modify the SQL query to use the formattedTime
-    const QueryMeanCloudCover = `
-        SELECT 
-            latitude AS Lat,
-            longitude AS Long,
-            AVG(tcc_mean) AS Total_Cloud_Cover
-        FROM 
-            era5_refined
-        WHERE
-            time = $1
-        GROUP BY 
-            latitude, longitude;
-    `
-
     rows, err := db.Query(QueryMeanCloudCover, formattedTime)
     if err != nil {
         log.Printf("Error querying the database for mean cloud cover data: %v", err)
@@ -506,13 +473,20 @@ func getMeanCloudCoverData(c *gin.Context) {
     var meanCloudData []TotalCloudCoverData
     for rows.Next() {
         var data TotalCloudCoverData
-        if err = rows.Scan(&data.Lat, &data.Long, &data.Mean_Total_Cloud_Cover); err != nil {
+        var meanCloudCover sql.NullFloat64 // Temporary variable for scanning
+
+        if err = rows.Scan(&data.Lat, &data.Long, &meanCloudCover); err != nil {
             log.Printf("Error scanning the rows for cloud cover data: %v", err)
             c.JSON(http.StatusInternalServerError, gin.H{
                 "message": "Error while scanning the database rows for cloud cover data",
             })
             return
         }
+
+        if meanCloudCover.Valid {
+            data.Mean_Total_Cloud_Cover = meanCloudCover.Float64 // Assign if valid
+        }
+
         meanCloudData = append(meanCloudData, data)
     }
 
@@ -532,7 +506,7 @@ func getAvgTemperaturesAverage(c *gin.Context) {
     var avgData []AverageTemperatureData
     for rows.Next() {
         var data AverageTemperatureData
-        if err = rows.Scan(&data.Latitude, &data.Longitude, &data.T2mMean); err != nil {
+        if err = rows.Scan(&data.Lat, &data.Long, &data.T2mMean); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error while scanning the database rows", err)
             return
         }
@@ -597,10 +571,17 @@ func getPrecipitationDataAverage(c *gin.Context) {
     var precipitationDataSlice []precipitationData
     for rows.Next() {
         var data precipitationData
-        if err = rows.Scan(&data.Time, &data.Lat, &data.Long, &data.TpEod); err != nil {
+        var tpSum sql.NullFloat64 // Temporary variable for scanning
+
+        if err = rows.Scan(&data.Time, &data.Lat, &data.Long, &tpSum); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
             return
         }
+
+        if tpSum.Valid {
+            data.TpSum = tpSum.Float64 // Assign if valid
+        }
+
         precipitationDataSlice = append(precipitationDataSlice, data)
     }
 
@@ -611,6 +592,7 @@ func getPrecipitationDataAverage(c *gin.Context) {
 
     c.JSON(http.StatusOK, precipitationDataSlice)
 }
+
 
 func getWindSpeedGroupedByLocationAverage(c *gin.Context) {
     rows, err := db.Query(QueryWindSpeedGroupedByLocationAverage)
