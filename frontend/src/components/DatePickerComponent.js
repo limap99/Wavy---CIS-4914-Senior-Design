@@ -13,14 +13,16 @@ const DatePickerComponent = ({ selectedDate, onDateChange }) => {
   //   setSelectedDate(date);
   // };
 
-  const CustomInput = ({ value, onClick }) => (
+  const CustomInput = React.forwardRef(({ value, onClick }, ref)  => (
     <input
       type="text"
+      name="datePicker" 
       value={value}
       onClick={onClick}
-     // readOnly // Make the input field read-only
+       readOnly // Make the input field read-only
+       ref={ref}
     />
-  );
+  ));
 
   return (
     <div>
@@ -36,6 +38,8 @@ const DatePickerComponent = ({ selectedDate, onDateChange }) => {
         showYearDropdown
         yearDropdownItemNumber={maxYear - minYear}
         scrollableYearDropdown
+        showMonthDropdown
+        scrollableMonthDropdown
       
         // renderCustomHeader={({
         //   date,

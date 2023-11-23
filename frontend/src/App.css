@@ -12,11 +12,21 @@
   /* Regular non-hover state style here */
 }
 
+.rot{
+  color: red;
+  transform: rotate(0deg);
+}
+
 .map-icon:hover {
-  background-color: #8aafb9;  /* Darker shade of the background */
+  background-color: #b9a18a;  /* Darker shade of the background */
   transform: scale(1.1);  /* Enlarges the icon */
   transition: all 0.3s ease;  /* Animation effect */
   
+}
+
+.fa-arrow-right:before {
+  content: "\f061";
+  color: #251e1e;
 }
 
 
@@ -83,3 +93,18 @@ html, body, #root {
   margin-top: 2rem;
 }
 
+.timeline-day-ruler {
+  width: 100%; /* Make the control span the full width of the map */
+  /* bottom: 0; Adjust if needed */
+  left: 0;
+  right: 0;
+  margin: 0; /* Remove any default margins */
+  box-sizing: border-box; /* Ensure padding and borders are included in the width */
+  margin-bottom:10rem
+}
+
+.leaflet-left {
+  left: 0;
+  margin-bottom: 7rem;
+  width:100%
+}

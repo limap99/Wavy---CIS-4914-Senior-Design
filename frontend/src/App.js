@@ -7,8 +7,10 @@ import TemperatureRect from './components/TemperatureRect';
 import PrecipitationRect from './components/PrecipitationRect'
 import DatePickerComponent from './components/DatePickerComponent';
 import BackendConnection from './components/BackendConnection';
+import InteractiveMap from './components/InteractiveMap';
 
 const Home = () => <h2>Home Page</h2>;
+
 
 const App = () => (
   <Router>
@@ -16,7 +18,7 @@ const App = () => (
       <Navbar />
       <Routes>
         <Route path="/" element={<BackendConnection/>} />
-        <Route path="/weather-map" element={<WeatherMap />} />
+        <Route path="/weather-map" element={<WeatherMap/>} />
       </Routes>
     </div>
   </Router>

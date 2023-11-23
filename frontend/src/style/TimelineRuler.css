@@ -1,0 +1,53 @@
+/* styles.css */
+.timeline-container {
+    display: flex;
+    align-items: center; /* This will vertically center the button and slider */
+  }
+  
+  .play-button {
+    margin-right: 0.2rem;
+    margin-left: 1rem;
+    border-radius: 2rem;
+    background-color: #eb437c;
+    font-weight: bold;
+    color: white;
+  }
+  
+  .slider {
+    width: 40%; /* The slider takes the remaining width */
+    flex-grow: 1; /* Allows the slider to grow and fill the container */
+    margin-right: 2rem;
+    /* height:20% */
+  }
+
+  .view-selector{
+    margin-bottom: 1rem;
+    font-weight: bold;
+    font-family: 'Montserrat';
+    text-align: right;
+    margin-right:3rem
+    /* margin-left: 1rem; */
+  }
+  .selector{
+    font-family: 'Montserrat';
+    margin-top: 1rem;
+  }
+  .currentDate {
+    font-size: 1.5rem;
+    font-family: 'Montserrat';
+    font-weight: 500;
+    color: #030501;
+}
+
+.h1-timeline{
+    font-size: 0.85rem;
+    text-align: right;
+    color: #1b5d96;
+    margin-bottom: -0.1rem;
+    margin-top: -0.7rem
+}
+
+.cont{
+    height: 100%;
+    background: #aad3df;
+}

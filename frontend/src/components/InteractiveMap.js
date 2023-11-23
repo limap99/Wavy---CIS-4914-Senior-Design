@@ -4,7 +4,7 @@ import TimelineDayRuler from './TimelineDayRuler';
 import WeatherMap from './WeatherMap';
 import { format } from 'date-fns';
 
-const BackendConnection = () => {
+const InteractiveMap = () => {
     const [data, setData] = useState(null);
     const [viewType, setViewType] = useState('year');
     const [date, setDate] = useState(new Date('1999-04-30T23:59:59'));
@@ -53,4 +53,4 @@ const BackendConnection = () => {
     );
 }
 
-export default BackendConnection;
+export default InteractiveMap;
