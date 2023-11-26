@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../style/DatePickerComponent.css';
 
-const DatePickerComponent = ({ selectedDate, onDateChange }) => {
+const DatePickerComponent = ({ selectedDate, onDateChange, mapView }) => {
   //const [selectedDate, setSelectedDate] = useState(new Date());
   const minYear = 1980; // Define the minimum year
   const maxYear = 2022; // Define the maximum year
@@ -26,7 +26,9 @@ const DatePickerComponent = ({ selectedDate, onDateChange }) => {
 
   return (
     <div>
-      <h1 className='h1-datepicker'>Select a Date:</h1>
+      {mapView === 'date' &&
+      <h1 className='h1-datepicker'>Select a Date:</h1> }
+      {mapView === 'date' &&
       <DatePicker
         selected={selectedDate}
         className="custom-datepicker"
@@ -60,7 +62,10 @@ const DatePickerComponent = ({ selectedDate, onDateChange }) => {
         //   </div>
         // )}
       />
+  }
+  
     </div>
+    
   );
 };
 

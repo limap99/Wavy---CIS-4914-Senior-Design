@@ -15,7 +15,7 @@ import AutoDateComponent from './AutoDateComponent';
 import TimelineDayRuler from './TimelineDayRuler';
 import TimelineYearRuler from './TimelineYearRuler';
 import TimelineRuler from './TimelineRuler';
-
+import MapView from './MapView';
 import DatePickerComponent from './DatePickerComponent';
 
 
@@ -31,29 +31,69 @@ const WeatherMap = () => {
     const [selectedDate, setSelectedDate] = useState(new Date(2022, 0, 1));
     const [isPlaying, setIsPlaying] = useState(false);
     const [selectedTimelineDate, setSelectedTimelineDate] = useState(new Date(2022, 0, 1))
+    const [mapView, setMapView] = useState('date');
+    const [height, setHeight] = useState(80);
     const [data, setData] = useState(null);
     const [dataLoaded, setDataLoad] = useState(false);
 
 
   let map = null
+
   
 
   let metricsLayer = null;
   let port = 4001
+  let apiUrl;
    
+ 
 
   const getApiUrl = (metric, date) => {
     switch (metric) {
       case 'avg_temp':
-        return `http://localhost:${port}/api/climate/avg?time=${date} 00:00:00`;
+        if(mapView === 'date'){
+          apiUrl = `http://localhost:${port}/api/climate/avg?time=${date} 00:00:00`
+        }
+        else if (mapView === 'average'){
+          apiUrl = `http://localhost:${port}/api/climate/temp-40-avg`
+
+        }
+        return apiUrl;
       case 'min_temp':
-        return `http://localhost:${port}/api/climate/min-low?time=${date} 00:00:00`;
+        if(mapView === 'date'){
+          apiUrl = `http://localhost:${port}/api/climate/min-low?time=${date} 00:00:00`
+        }
+        else if (mapView === 'average'){
+          apiUrl = `http://localhost:${port}/api/climate/min-low-40-avg`
+
+        }
+        return apiUrl;
       case 'max_temp':
-        return `http://localhost:${port}/api/climate/max-high?time=${date} 00:00:00`;
+        if(mapView === 'date'){
+          apiUrl = `http://localhost:${port}/api/climate/max-high?time=${date} 00:00:00`
+        }
+        else if (mapView === 'average'){
+          apiUrl = `http://localhost:${port}/api/climate/max-high-40-avg`
+
+        }
+        return apiUrl;
       case 'wind':
-        return `http://localhost:${port}/api/climate/windspeed?time=${date} 00:00:00`;
+        if(mapView === 'date'){
+          apiUrl = `http://localhost:${port}/api/climate/windspeed?time=${date} 00:00:00`;
+        }
+        else if (mapView === 'average'){
+          apiUrl = `http://localhost:${port}/api/climate/windspeed-40-avg`
+
+        }
+        return apiUrl
       case 'precipitation':
-          return `http://localhost:${port}/api/climate/precipitation?time=${date} 00:00:00`;
+        if(mapView === 'date'){
+          apiUrl = `http://localhost:${port}/api/climate/precipitation?time=${date} 00:00:00`;
+        }
+        else if (mapView === 'average'){
+          apiUrl = `http://localhost:${port}/api/climate/precipitation-40-avg`
+
+        }
+        return apiUrl
       case 'clouds':
           return `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00`;
       default:
@@ -66,6 +106,15 @@ const WeatherMap = () => {
   const onDateChange = (date) => {
     setSelectedDate(date);
     //setSelectedTimelineDate(date);
+  };
+  const onMapViewChange = (mapView) => {
+    setMapView(mapView)
+    if(mapView === 'average'){
+      setHeight(100)
+    }
+    else{
+      setHeight(80)
+    }
   };
   const onTimelineDateChange = (date) => {
     console.log('DATEE' + date)
@@ -325,7 +374,7 @@ const WeatherMap = () => {
                       }
                       else{
                         let metricValue = Object.values(data[j])[2]
-                        if(currentMetric == 'clouds'){
+                        if(currentMetric === 'clouds'){
                           metricValue = metricValue * 100
                         }
                         grids[i].properties[currentMetric]= metricValue 
@@ -418,6 +467,8 @@ const WeatherMap = () => {
     const mapContainer = document.getElementById('map');
     
     
+
+
 
 
     const bounds = [
@@ -546,14 +597,15 @@ const WeatherMap = () => {
         <i class="fas fa-cloud-rain" style="font-size: 20px; color: #0f2e8a"></i>
         <span style="margin-left: 8px;  font-weight: bold">Average Precipitation</span>
       </div>
+      <div class="map-icon" style="display: flex; text-align: center; align-items: center; margin-bottom: 20px; cursor: pointer;" onclick="window.switchMetric('wind')">
+      <i class="fas fa-wind" style="font-size: 20px; color: #097d9f"></i>
+        <span style="margin-left: 8px;  font-weight: bold">Wind Speed and Direction</span>
+      </div>
       <div class="map-icon" style="display: flex; text-align: center; align-items: center; margin-bottom: 20px; cursor: pointer;" onclick="window.switchMetric('clouds')">
       <i class="fas fa-cloud" style="font-size: 20px; color: #097d9f"></i>
         <span style="margin-left: 8px;  font-weight: bold">Cloud Cover</span>
       </div>
-      <div class="map-icon" style="transform: rotate(0deg); display: flex; text-align: center; align-items: center; margin-bottom: 20px; cursor: pointer;" onclick="window.switchMetric('wind')">
-      <i class="fas fa-wind" style="font-size: 20px; color: #899598"></i>
-        <span style="margin-left: 8px;  font-weight: bold">Wind Speed and Direction</span>
-      </div>
+      
     `;
 
     //  // Create a div element to render the TemperatureRect component
@@ -659,7 +711,9 @@ const WeatherMap = () => {
         const root = createRoot(DateSelectorComponent)
 
         root.render(<DatePickerComponent selectedDate={selectedDate} 
-          onDateChange={onDateChange} />)
+          onDateChange={onDateChange} mapView={mapView}/>) 
+
+        
         
         // // Render the TemperatureRect component inside the div
         // ReactDOM.render(<DatePickerComponent selectedDate={selectedDate} 
@@ -675,6 +729,42 @@ const WeatherMap = () => {
           return container;
         }
       });
+
+      const MapViewSelector = L.Control.extend({
+      
+
+        options: {
+          position: 'topleft'
+        },
+
+        onAdd: function () {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+          
+
+
+
+        // Create a div element to render the TemperatureRect component
+        const MapViewComponent= document.createElement('div');
+        
+        const root = createRoot(MapViewComponent)
+
+        root.render(<MapView onMapViewChange={onMapViewChange} />)
+        
+        // // Render the TemperatureRect component inside the div
+        // ReactDOM.render(<DatePickerComponent selectedDate={selectedDate} 
+        //   onDateChange={onDateChange} />, DateSelectorComponent);
+        
+    
+        container.appendChild(MapViewComponent);
+        
+        
+      
+        
+  
+          return container;
+        }
+      });
+
 
       const TimelineDayRulerControl = L.Control.extend({
       
@@ -790,10 +880,14 @@ const WeatherMap = () => {
     });
 
 
-      
-      
+  
      map.addControl(new customControl());
+     //map.addControl(new MapViewSelector())
+
      map.addControl(new DateSelector());
+     
+     
+     
     //map.addControl(new TimelineYearRulerControl());
     //  map.addControl(new AutoDateControl());
      map.addControl(new tempMeter());
@@ -818,7 +912,7 @@ const WeatherMap = () => {
         map.remove();
       }
     };
-  }, [currentMetric, selectedDate]);
+  }, [currentMetric, selectedDate, mapView]);
 
 
 
@@ -839,9 +933,11 @@ const WeatherMap = () => {
 
     // </div>
       <div style={{ height: '100%', width: '100%', position: 'relative' }}>
-              <div id="map" style={{ height: '85%', width: '100%', position: 'relative' }}> </div>
+              <MapView  onMapViewChange={onMapViewChange} style={{ height: '3%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: '#416892b0' }} />
+              <div id="map" style={{ height: `${height}%`, width: '100%', position: 'relative' }}> </div>
               {/* <TimelineRuler date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
-              <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />
+              {mapView==='date' &&  <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
+              {/* <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
               {/* <TimelineDayRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
 
 
