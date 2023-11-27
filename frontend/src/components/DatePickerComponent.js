@@ -24,6 +24,8 @@ const DatePickerComponent = ({ selectedDate, onDateChange, mapView }) => {
     />
   ));
 
+
+
   return (
     <div>
       <h1 className='h1-datepicker'>Select a Date:</h1> 
