@@ -26,9 +26,7 @@ const DatePickerComponent = ({ selectedDate, onDateChange, mapView }) => {
 
   return (
     <div>
-      {mapView === 'date' &&
-      <h1 className='h1-datepicker'>Select a Date:</h1> }
-      {mapView === 'date' &&
+      <h1 className='h1-datepicker'>Select a Date:</h1> 
       <DatePicker
         selected={selectedDate}
         className="custom-datepicker"
@@ -62,7 +60,7 @@ const DatePickerComponent = ({ selectedDate, onDateChange, mapView }) => {
         //   </div>
         // )}
       />
-  }
+  
   
     </div>
     

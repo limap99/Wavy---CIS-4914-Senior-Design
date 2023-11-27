@@ -54,7 +54,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/avg?time=${date} 00:00:00`
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/temp-40-avg`
+          apiUrl = `http://localhost:${port}/api/climate/temp-40-avg?time=${date} 00:00:00`
 
         }
         return apiUrl;
@@ -63,7 +63,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/min-low?time=${date} 00:00:00`
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/min-low-40-avg`
+          apiUrl = `http://localhost:${port}/api/climate/min-low-40-avg?time=${date} 00:00:00`
 
         }
         return apiUrl;
@@ -72,7 +72,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/max-high?time=${date} 00:00:00`
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/max-high-40-avg`
+          apiUrl = `http://localhost:${port}/api/climate/max-high-40-avg?time=${date} 00:00:00`
 
         }
         return apiUrl;
@@ -81,7 +81,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/windspeed?time=${date} 00:00:00`;
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/windspeed-40-avg`
+          apiUrl = `http://localhost:${port}/api/climate/windspeed-40-avg?time=${date} 00:00:00`
 
         }
         return apiUrl
@@ -90,14 +90,14 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/precipitation?time=${date} 00:00:00`;
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/precipitation-40-avg`
+          apiUrl = `http://localhost:${port}/api/climate/precipitation-40-avg?time=${date} 00:00:00`
 
         }
         return apiUrl
       case 'clouds':
-          return `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00`;
+          return `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00?time=${date} 00:00:00`;
       default:
-        return `http://localhost:${port}/api/climate/precipitation?time=${date}00:00:00`;
+        return `http://localhost:${port}/api/climate/precipitation?time=${date}00:00:00?time=${date} 00:00:00`;
     }
   };
 
@@ -109,12 +109,12 @@ const WeatherMap = () => {
   };
   const onMapViewChange = (mapView) => {
     setMapView(mapView)
-    if(mapView === 'average'){
-      setHeight(100)
-    }
-    else{
-      setHeight(80)
-    }
+    // if(mapView === 'average'){
+    //   setHeight(100)
+    // }
+    // else{
+    //   setHeight(80)
+    // }
   };
   const onTimelineDateChange = (date) => {
     console.log('DATEE' + date)
@@ -936,7 +936,7 @@ const WeatherMap = () => {
               <MapView  onMapViewChange={onMapViewChange} style={{ height: '3%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: '#416892b0' }} />
               <div id="map" style={{ height: `${height}%`, width: '100%', position: 'relative' }}> </div>
               {/* <TimelineRuler date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
-              {mapView==='date' &&  <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
+              { <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
               {/* <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
               {/* <TimelineDayRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
 

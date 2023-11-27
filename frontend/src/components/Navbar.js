@@ -13,7 +13,7 @@ const Navbar = () => {
         {/* <img src="logo.png" alt="Website Logo" /> */}
       </div>
       <div className="nav-links">
-        <Link to="/home" className={location.pathname === '/' ? 'active' : ''}>
+        <Link to="/home" className={location.pathname === '/home' ? 'active' : ''}>
           Home
         </Link>
         <Link

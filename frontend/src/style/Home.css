@@ -5,7 +5,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f0f0f0; /* Sleek background color */
+    background-color: #f3efe9 /* Sleek background color */
 }
 
 .top-section {
@@ -21,12 +21,22 @@
     width: 50%;
     padding-right: 20px;
     text-align: left; /* Left align the text */
+    font-family: 'Montserrat';
 }
 
 .header-image {
     width: 50%;
     max-width: 100%;
     height: auto;
+}
+
+.header-h1{
+    color: #0c5169
+}
+
+.header-info{
+    font-size: 1.2rem;
+    color: #094545;
 }
 
 .explore-button {
