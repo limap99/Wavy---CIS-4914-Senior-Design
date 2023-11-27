@@ -93,6 +93,33 @@ type Era5Data struct {
 	//Geom                *Geometry       `json:"geom,omitempty"` // Geometry is a custom type for handling geom data
 }
 
+type Era5Averaged struct {
+    Lat                float64 `json:"Lat"`
+    Long               float64 `json:"Long"`
+    MwdMean           *float64 `json:"mwd_mean,omitempty"`
+    MwpMean           *float64 `json:"mwp_mean,omitempty"`
+    SstMean           *float64 `json:"sst_mean,omitempty"`
+    SwhMean           *float64 `json:"swh_mean,omitempty"`
+    WindSpeedMean     *float64 `json:"wind_speed_mean,omitempty"`
+    WindDirectionMean *float64 `json:"wind_direction_mean,omitempty"`
+    D2mMin            *float64 `json:"d2m_min,omitempty"`
+    D2mMean           *float64 `json:"d2m_mean,omitempty"`
+    D2mMax            *float64 `json:"d2m_max,omitempty"`
+    T2mMin            *float64 `json:"t2m_min,omitempty"`
+    T2mMean           *float64 `json:"t2m_mean,omitempty"`
+    T2mMax            *float64 `json:"t2m_max,omitempty"`
+    TccMin            *float64 `json:"tcc_min,omitempty"`
+    TccMean           *float64 `json:"tcc_mean,omitempty"`
+    TccMax            *float64 `json:"tcc_max,omitempty"`
+    TpSum             float64 `json:"tp_sum,omitempty"`
+    PrecipitationType *string `json:"precipitation_type,omitempty"` // New field for precipitation type
+    Month             int     `json:"Month"`
+    Day               int     `json:"Day"`
+    Max_Daily_High     float64 `json:"Max_Daily_High"`
+    Min_Daily_Low     float64 `json:"Min_Daily_Low`
+}
+
+
 
 type AverageTemperatureData struct {
 	Lat  float64 `json:"Lat"`
@@ -128,12 +155,12 @@ type SeaWaveHeightData struct {
 
 type WindSpeed struct {
     Time                time.Time `json:"time"`
-    Latitude            float64   `json:"Lat"`
-    Longitude           float64   `json:"Long"`
+    Lat                 float64   `json:"Lat"`
+    Long                  float64   `json:"Long"`
     WindDirectionMean   float64   `json:"wind_direction_mean"`
     WindSpeedMean       float64   `json:"wind_speed_mean"`
-}
 
+}
 
 // SeaWaveHeightData defines the JSON format for sea wave height response
 type TotalCloudCoverData struct {
@@ -370,7 +397,7 @@ func getWindSpeedGroupedByLocation(c *gin.Context) {
     var results []WindSpeed
     for rows.Next() {
         var data WindSpeed
-        err := rows.Scan(&data.Time, &data.Latitude, &data.Longitude, &data.WindDirectionMean, &data.WindSpeedMean)
+        err := rows.Scan(&data.Time, &data.Lat, &data.Long, &data.WindDirectionMean, &data.WindSpeedMean)
         if err != nil {
             log.Printf("Error scanning the rows for wind speed data: %v", err)
             c.JSON(http.StatusInternalServerError, gin.H{
@@ -494,9 +521,18 @@ func getMeanCloudCoverData(c *gin.Context) {
 }
 
 
+// Function to get average temperatures
 func getAvgTemperaturesAverage(c *gin.Context) {
+    // Extract the 'month' and 'day' query parameters
+    month, day := c.Query("month"), c.Query("day")
+    if month == "" || day == "" {
+        respondWithError(c, http.StatusBadRequest, "Month and day parameters are required.", nil)
+        return
+    }
+
+    // Use the prepared query with placeholders for month and day
     query := QueryAvgTemperaturesAverage
-    rows, err := db.Query(query)
+    rows, err := db.Query(query, month, day)
     if err != nil {
         respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
         return
@@ -506,6 +542,7 @@ func getAvgTemperaturesAverage(c *gin.Context) {
     var avgData []AverageTemperatureData
     for rows.Next() {
         var data AverageTemperatureData
+        // Scan only the columns that are being selected in the query
         if err = rows.Scan(&data.Lat, &data.Long, &data.T2mMean); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error while scanning the database rows", err)
             return
@@ -513,12 +550,26 @@ func getAvgTemperaturesAverage(c *gin.Context) {
         avgData = append(avgData, data)
     }
 
+    if err = rows.Err(); err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error iterating over the results", err)
+        return
+    }
+
     c.JSON(http.StatusOK, avgData)
 }
 
+
 func getMaxHighClimateDataAverage(c *gin.Context) {
+    // Extract the 'month' and 'day' query parameters
+    month, day := c.Query("month"), c.Query("day")
+    if month == "" || day == "" {
+        respondWithError(c, http.StatusBadRequest, "Month and day parameters are required.", nil)
+        return
+    }
+
+    // Use the prepared query with placeholders for month and day
     query := QueryMaxHighClimateDataAverage
-    rows, err := db.Query(query)
+    rows, err := db.Query(query, month, day)
     if err != nil {
         respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
         return
@@ -528,6 +579,7 @@ func getMaxHighClimateDataAverage(c *gin.Context) {
     var maxHighData []ClimateMaxHighData
     for rows.Next() {
         var data ClimateMaxHighData
+        // Scan only the columns that are being selected in the query
         if err = rows.Scan(&data.Lat, &data.Long, &data.Max_Daily_High); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
             return
@@ -538,9 +590,18 @@ func getMaxHighClimateDataAverage(c *gin.Context) {
     c.JSON(http.StatusOK, maxHighData)
 }
 
+
 func getMinLowClimateDataAverage(c *gin.Context) {
+    // Extract the 'month' and 'day' query parameters
+    month, day := c.Query("month"), c.Query("day")
+    if month == "" || day == "" {
+        respondWithError(c, http.StatusBadRequest, "Month and day parameters are required.", nil)
+        return
+    }
+
+    // Use the prepared query with placeholders for month and day
     query := QueryMinLowClimateDataAverage
-    rows, err := db.Query(query)
+    rows, err := db.Query(query, month, day)
     if err != nil {
         respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
         return
@@ -550,6 +611,7 @@ func getMinLowClimateDataAverage(c *gin.Context) {
     var minLowData []ClimateMinLowData
     for rows.Next() {
         var data ClimateMinLowData
+        // Scan only the columns that are being selected in the query
         if err = rows.Scan(&data.Lat, &data.Long, &data.Min_Daily_Low); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
             return
@@ -561,7 +623,16 @@ func getMinLowClimateDataAverage(c *gin.Context) {
 }
 
 func getPrecipitationDataAverage(c *gin.Context) {
-    rows, err := db.Query(QueryPrecipitationDataAverage)
+    // Extract the 'month' and 'day' query parameters
+    month, day := c.Query("month"), c.Query("day")
+    if month == "" || day == "" {
+        respondWithError(c, http.StatusBadRequest, "Month and day parameters are required.", nil)
+        return
+    }
+
+    // Use the prepared query with placeholders for month and day
+    query := QueryPrecipitationDataAverage
+    rows, err := db.Query(query, month, day)
     if err != nil {
         respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
         return
@@ -573,7 +644,7 @@ func getPrecipitationDataAverage(c *gin.Context) {
         var data precipitationData
         var tpSum sql.NullFloat64 // Temporary variable for scanning
 
-        if err = rows.Scan(&data.Time, &data.Lat, &data.Long, &tpSum); err != nil {
+        if err = rows.Scan(&data.Lat, &data.Long, &tpSum); err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
             return
         }
@@ -594,8 +665,18 @@ func getPrecipitationDataAverage(c *gin.Context) {
 }
 
 
+
 func getWindSpeedGroupedByLocationAverage(c *gin.Context) {
-    rows, err := db.Query(QueryWindSpeedGroupedByLocationAverage)
+    // Extract the 'month' and 'day' query parameters
+    month, day := c.Query("month"), c.Query("day")
+    if month == "" || day == "" {
+        respondWithError(c, http.StatusBadRequest, "Month and day parameters are required.", nil)
+        return
+    }
+
+    // Use the prepared query with placeholders for month and day
+    query := QueryWindSpeedGroupedByLocationAverage
+    rows, err := db.Query(query, month, day)
     if err != nil {
         respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
         return
@@ -605,7 +686,8 @@ func getWindSpeedGroupedByLocationAverage(c *gin.Context) {
     var results []WindSpeed
     for rows.Next() {
         var data WindSpeed
-        err := rows.Scan(&data.Latitude, &data.Longitude, &data.WindDirectionMean, &data.WindSpeedMean)
+        // Scan only the columns that are being selected in the query
+        err := rows.Scan(&data.Lat, &data.Long, &data.WindDirectionMean, &data.WindSpeedMean)
         if err != nil {
             respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
             return
@@ -642,6 +724,7 @@ func getAllCoordinates(c *gin.Context) {
 
     c.JSON(http.StatusOK, allCoordinates)
 }
+
 
 
 
