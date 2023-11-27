@@ -13,7 +13,7 @@ const Navbar = () => {
         {/* <img src="logo.png" alt="Website Logo" /> */}
       </div>
       <div className="nav-links">
-        <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
+        <Link to="/home" className={location.pathname === '/' ? 'active' : ''}>
           Home
         </Link>
         <Link
@@ -23,6 +23,14 @@ const Navbar = () => {
           }
         >
          Wavy Map
+        </Link>
+        <Link
+          to="/search"
+          className={
+            location.pathname === '/search' ? 'active' : ''
+          }
+        >
+         Search
         </Link>
       </div>
       <div className="time-range-selector">
