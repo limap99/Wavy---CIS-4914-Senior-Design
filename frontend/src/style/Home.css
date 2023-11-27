@@ -1,0 +1,49 @@
+.homepage {
+    text-align: center;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0; /* Sleek background color */
+}
+
+.top-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80%; /* Adjusted for better spacing */
+    height: 90%;
+    padding: 20px;
+}
+
+.header-content {
+    width: 50%;
+    padding-right: 20px;
+    text-align: left; /* Left align the text */
+}
+
+.header-image {
+    width: 50%;
+    max-width: 100%;
+    height: auto;
+}
+
+.explore-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none; /* Remove underline from link */
+}
+
+/* Additional styles for hover effect on the button */
+.explore-button:hover {
+    background-color: #0056b3;
+}
