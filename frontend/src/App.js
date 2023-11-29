@@ -19,8 +19,8 @@ const App = () => (
     <div className="App">
       <Navbar />
       <Routes>
-        <Route path="/" element={<BackendConnection/>} />
-        <Route path="/home" element={<Home/>} />
+        {/* <Route path="/" element={<BackendConnection/>} /> */}
+        <Route path="/" element={<Home/>} />
         <Route path="/search" element={<ClimateDataSearch/>} />
         <Route path="/weather-map" element={<WeatherMap/>} />
       </Routes>

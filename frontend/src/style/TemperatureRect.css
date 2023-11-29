@@ -143,32 +143,39 @@
 
   .wv3 {
     background-color: #f6eff7;
-    color: white;
+    color: #393030;
   }
   
   .wv4 {
     background-color: #d0d1e6; 
-    color: white;
+    color: #393030;
   }
   
   .wv5 {
     background-color: #a6bddb;
-    color: white;
+    color: #393030;
   }
   
   .wv6 {
     background-color: #67a9cf;
-    color: white;
+    color: #393030;
   }
   
   .wv7 {
     background-color: #1c9099;
-    color: white;
+    color: #393030;
   }
   
   .wv8 {
     background-color: #016c59;
-    color: white;
+    color: #393030;
+  }
+  .value-cloud {
+    text-align: center;
+    margin-top: 5px;
+    color: 393030;
+    font-size: 0.75rem;
+    font-weight: bold;
   }
   
   .value {
