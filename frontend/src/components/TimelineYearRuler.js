@@ -46,7 +46,7 @@ const TimelineYearRuler = ({date, onDateChange}) => {
                   onDateChange(nextDate); // Call onDateChange with the updated date
                   return nextDate;
               });
-          }, 1000); // Update every second
+          }, 1500); // Update every second
       } else {
           clearInterval(interval); // Clear interval when isPlaying is false
       }
@@ -88,66 +88,5 @@ const TimelineYearRuler = ({date, onDateChange}) => {
     );
 };
 
-
-// const TimelineRuler = () => {
-//   const startDate = new Date('1999-04-31T23:59:59'); // Initialize to the current date
-//   const endDate = new Date('2023-12-31T23:59:59'); // End of 2023
-//   const oneDay = 86400000; // Milliseconds in one day
-
-//   // Calculate the difference in days for the slider max value
-//   const maxSliderValue = Math.floor((endDate - startDate) / oneDay);
-
-//   const [currentDate, setCurrentDate] = useState(startDate);
-//   const [isPlaying, setIsPlaying] = useState(false);
-//   const [sliderValue, setSliderValue] = useState(0);
-
-//   const handlePlayPause = () => {
-//     setIsPlaying(!isPlaying);
-//   };
-
-//   useEffect(() => {
-//     let interval;
-//     if (isPlaying) {
-//       interval = setInterval(() => {
-//         setCurrentDate((prevDate) => {
-//           const nextDate = new Date(prevDate.getTime() + oneDay);
-//           return nextDate > endDate ? endDate : nextDate;
-//         });
-//       }, 1000); // Update every second
-//     }
-//     return () => clearInterval(interval);
-//   }, [isPlaying, endDate]);
-
-//   useEffect(() => {
-//     const diffInDays = Math.floor((currentDate - startDate) / oneDay);
-//     setSliderValue(diffInDays);
-//   }, [currentDate, startDate]);
-
-//   const onSliderChange = (value) => {
-//     const newDate = new Date(startDate.getTime() + value * oneDay);
-//     setCurrentDate(newDate > endDate ? endDate : newDate);
-//     setSliderValue(value);
-//   };
-
-//   return (
-//     <div>
-//         <div className="timeline-container">
-//         <button onClick={handlePlayPause} className="play-button">
-//             {isPlaying ? 'Pause' : 'Play'}
-//         </button>
-//         <input
-//             type="range"
-//             min="0"
-//             max={maxSliderValue}
-//             value={sliderValue}
-//             onChange={(e) => onSliderChange(Number(e.target.value))}
-//             className="slider"
-//         />
-//         </div>
-//         <div>Current Date: {currentDate.toDateString()}</div>
-//     </div>
-    
-//   );
-// };
 
 export default TimelineYearRuler;
