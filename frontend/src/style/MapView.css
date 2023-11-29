@@ -1,0 +1,34 @@
+.timeline-container {
+    display: flex;
+    align-items: center; /* This will vertically center the button and slider */
+  }
+  
+  .average-button {
+    margin-right: 0.2rem;
+    margin-left: 1rem;
+    border-radius: 2rem;
+    background-color: #b2cce3;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .date-button{
+    margin-right: 0.2rem;
+    margin-left: 1rem;
+    border-radius: 2rem;
+    background-color: #b2cce3;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
+
+  .active-view {
+    background-color: #eb437c; /* color when active */
+}
+
+.map-view-container{
+    background-color: #f3efe9;
+    display: flex;
+    align-items: center;
+}

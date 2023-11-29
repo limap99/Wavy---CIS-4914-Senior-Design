@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import TimelineYearRuler from './TimelineYearRuler';
 import TimelineDayRuler from './TimelineDayRuler';
 import WeatherMap from './WeatherMap';
-import MapView from './MapView';
 import { format } from 'date-fns';
 
-const BackendConnection = () => {
+const InteractiveMap = () => {
     const [data, setData] = useState(null);
     const [viewType, setViewType] = useState('year');
     const [date, setDate] = useState(new Date('1999-04-30T23:59:59'));
@@ -18,7 +17,7 @@ const BackendConnection = () => {
     useEffect(() => {
         let  formattedDate = format(date, 'yyyy-MM-dd')
         // Fetch data from Go backend running on port 4000\
-        fetch(`http://localhost:4001/api/climate/waveheight?time=${formattedDate} 00:00:00`)
+        fetch(`http://localhost:4000/api/climate/waveheight?time=${formattedDate} 00:00:00`)
             .then(response => response.json())
             .then(data => {
                 setData(data)
@@ -35,7 +34,6 @@ const BackendConnection = () => {
     
     return (
         <div>
-        
         {/* <div className="view-selector">
             <select value={viewType} onChange={handleViewTypeChange}>
                 <option value="year">Yearly</option>
@@ -47,12 +45,12 @@ const BackendConnection = () => {
          */}
         
         <div>
-            {/* {data ? JSON.stringify(data) : 'Loading...'} */}
+            {data ? JSON.stringify(data) : 'Loading...'}
         </div>
-         {/* <TimelineYearRuler date={date} onDateChange={onDateChange}/> */}
+         <TimelineYearRuler date={date} onDateChange={onDateChange}/>
 
     </div>
     );
 }
 
-export default BackendConnection;
+export default InteractiveMap;

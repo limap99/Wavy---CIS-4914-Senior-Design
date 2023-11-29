@@ -24,6 +24,14 @@ const Navbar = () => {
         >
          Wavy Map
         </Link>
+        <Link
+          to="/search"
+          className={
+            location.pathname === '/search' ? 'active' : ''
+          }
+        >
+         Search
+        </Link>
       </div>
       <div className="time-range-selector">
       </div>
