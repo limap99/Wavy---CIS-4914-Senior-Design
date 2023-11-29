@@ -12,9 +12,8 @@ import ReactDOM from 'react-dom';
 import PrecipitationRect from './PrecipitationRect';
 import { format } from 'date-fns';
 import AutoDateComponent from './AutoDateComponent';
-import TimelineDayRuler from './TimelineDayRuler';
+import TimelineAverageRuler from './TimelineAverageRuler';
 import TimelineYearRuler from './TimelineYearRuler';
-import TimelineRuler from './TimelineRuler';
 import MapView from './MapView';
 import DatePickerComponent from './DatePickerComponent';
 
@@ -47,14 +46,14 @@ const WeatherMap = () => {
    
  
 
-  const getApiUrl = (metric, date) => {
+  const getApiUrl = (metric, date, mapView) => {
     switch (metric) {
       case 'avg_temp':
         if(mapView === 'date'){
           apiUrl = `http://localhost:${port}/api/climate/avg?time=${date} 00:00:00`
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/temp-40-avg?time=${date} 00:00:00`
+          apiUrl = `http://localhost:${port}/api/climate/temp-40-avg?month=${date.slice(5,7)}&day=${date.slice(8, 10)}`
 
         }
         return apiUrl;
@@ -63,7 +62,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/min-low?time=${date} 00:00:00`
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/min-low-40-avg?time=${date} 00:00:00`
+          apiUrl = `http://localhost:${port}/api/climate/min-low-40-avg?month=${date.slice(5,7)}&day=${date.slice(8, 10)}`
 
         }
         return apiUrl;
@@ -72,7 +71,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/max-high?time=${date} 00:00:00`
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/max-high-40-avg?time=${date} 00:00:00`
+          apiUrl = `http://localhost:${port}/api/climate/max-high-40-avg?month=${date.slice(5,7)}&day=${date.slice(8, 10)}`
 
         }
         return apiUrl;
@@ -81,7 +80,7 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/windspeed?time=${date} 00:00:00`;
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/windspeed-40-avg?time=${date} 00:00:00`
+          apiUrl = `http://localhost:${port}/api/climate/windspeed-40-avg?month=${date.slice(5,7)}&day=${date.slice(8, 10)}`
 
         }
         return apiUrl
@@ -90,14 +89,14 @@ const WeatherMap = () => {
           apiUrl = `http://localhost:${port}/api/climate/precipitation?time=${date} 00:00:00`;
         }
         else if (mapView === 'average'){
-          apiUrl = `http://localhost:${port}/api/climate/precipitation-40-avg?time=${date} 00:00:00`
+          apiUrl = `http://localhost:${port}/api/climate/precipitation-40-avg?month=${date.slice(5,7)}&day=${date.slice(8, 10)}`
 
         }
         return apiUrl
       case 'clouds':
-          return `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00?time=${date} 00:00:00`;
+          return `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00`;
       default:
-        return `http://localhost:${port}/api/climate/precipitation?time=${date}00:00:00?time=${date} 00:00:00`;
+        return `http://localhost:${port}/api/climate/precipitation?time=${date}00:00:00`;
     }
   };
 
@@ -105,51 +104,21 @@ const WeatherMap = () => {
 
   const onDateChange = (date) => {
     setSelectedDate(date);
-    //setSelectedTimelineDate(date);
   };
   const onMapViewChange = (mapView) => {
     setMapView(mapView)
-    // if(mapView === 'average'){
-    //   setHeight(100)
-    // }
-    // else{
-    //   setHeight(80)
-    // }
-  };
-  const onTimelineDateChange = (date) => {
-    console.log('DATEE' + date)
-    setSelectedTimelineDate(date);
-    console.log('Timeline DATE Changed')
-    console.log(selectedTimelineDate)
-  };
+    if(mapView === 'average'){
+      setSelectedDate(new Date(2020, 0, 1))
+    }
+    else{
+      setSelectedDate(new Date(2022, 0, 1))
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    console.log('KSFLSD')
-    if(!isPlaying){
-      setSelectedDate(selectedTimelineDate)
     }
   };
+  const onTimelineDateChange = (date) => {
+    setSelectedTimelineDate(date);
+  };
 
-
-  // const onDateChange = (date) => {
-  //   setSelectedDate(date);
-  //   setSelectedTimelineDate(date);
-  // };
-  // const onTimelineDateChange = (date) => {
-  //   setSelectedTimelineDate(date);
-  // };
-
-  // const handlePlayPause = () => {
-  //   setIsPlaying(!isPlaying);
-  //   if(!isPlaying){
-  //     setSelectedDate(selectedTimelineDate)
-  //   }
-  // };
-
-  // if(isPlaying){
-  //   console.log('ISPLAYING')
-  // }
   
 
 
@@ -161,7 +130,7 @@ const WeatherMap = () => {
           value > 0.07? '#6699FF' : // Moderate
           value > 0.03  ? '#99CCFF' :
           value > 0.02  ? '#CCE5FF' :
-          value > 0.015  ? '#E5F2FF' :
+          value > 0.01  ? '#E5F2FF' :
                      '#F0F8FF'; // Dry
         }
         else if (currentMetric === 'wind') {
@@ -176,14 +145,14 @@ const WeatherMap = () => {
         }
 
         else if (currentMetric === 'clouds') {
-          return value > 5 ? '#016c59' : 
-          value > 4 ? '#1c9099' : 
-          value > 3 ? '#67a9cf' : 
-          value > 2  ? '#a6bddb' :
-          value > 1  ? '#d0d1e6' :
+          return value > 90 ? '#f6eff7' : 
+          value > 70 ? '#d0d1e6' : 
+          value > 50 ? '#a6bddb' : 
+          value > 30  ? '#67a9cf' :
+          value > 20  ? '#1c9099' :
           // value > 15  ? '#bfd3e6' :
           // value > 10  ? '#e0ecf4' :
-                     '#f6eff7'; 
+                     '#016c59'; 
         }
 
         else {
@@ -265,16 +234,8 @@ const WeatherMap = () => {
 
     const resetHighlight = (e) => {
         const layer = e.target;
-        // layer.setStyle({
-        //     fillColor: getColor(layer.feature.properties[currentMetric]),
-        //     weight: 2,
-        //     opacity: 1,
-        //     color: 'white',
-        //     dashArray: '3',
-        //     fillOpacity: 0.7
-        // })
+  
         layer.setStyle({
-            //fillColor: getColor(layer.feature.properties[currentMetric]),
             weight: 2,
             opacity: 1,
             color: 'white',
@@ -340,15 +301,7 @@ const WeatherMap = () => {
 
 
   useEffect(() => {
-    //let formattedDate = null
-    // if(isPlaying){
-    //   formattedDate = format(selectedTimelineDate, 'yyyy-MM-dd')
-    // }
-    // else{
-    //   formattedDate = format(selectedTimelineDate, 'yyyy-MM-dd')
-    // }
-    //formattedDate = format(selectedDate, 'yyyy-MM-dd')
-    let api_url = getApiUrl(currentMetric, formattedDate);
+    let api_url = getApiUrl(currentMetric, formattedDate, mapView);
     fetch(api_url)
             .then(response => response.json())
             .then(data => {
@@ -364,13 +317,10 @@ const WeatherMap = () => {
                         grids[i].properties[currentMetric]= metricValue 
                         grids[i].wind_direction = data[j].wind_direction_mean
                       }
-                      // else if(currentMetric === 'waves' && data[j].mean_sea_wave_height > 0){
-                      //   let metricValue = Object.values(data[j])[2]
-                      //   grids[i].properties[currentMetric]= metricValue 
-                      // }
+                
                       else if(currentMetric === 'precipitation'){
                         let metricValue = Object.values(data[j])[3]
-                        grids[i].properties[currentMetric]= Math.round(metricValue * 10000) / 10000
+                        grids[i].properties[currentMetric]= Math.round(metricValue * 1000) / 1000
                       }
                       else{
                         let metricValue = Object.values(data[j])[2]
@@ -389,7 +339,7 @@ const WeatherMap = () => {
              
               metricsLayer = L.geoJSON(turf.featureCollection(grids), {
                 style: style,
-                // onEachFeature: onEachFeature,
+    
             }).addTo(map);
 
             if(currentMetric === 'wind'){
@@ -419,49 +369,16 @@ const WeatherMap = () => {
                 }
             });
         });
-
-        // if(currentMetric === 'wind'){
-        //   grids.forEach(grid => {
-        //     const icon = L.divIcon({
-        //       html: `<div class="fas fa-arrow-right" style="transform: rotate(${grid.wind_direction}deg);"></div>`, // Your custom HTML for the icon
-        //       iconSize: [25, 25], // Size of the icon
-        //       iconAnchor: [12, 12], // Point of the icon which will correspond to marker's location
-        //       className: 'custom-div-icon' // Custom class for additional styling
-        //     });
-          
-        //     L.marker([grid.gridCenter[1], grid.gridCenter[0]], {icon: icon})
-        //       .addTo(map);
-        //   });
-        // }
         
 
             })
 
 
-
-            // .then(dataLoaded => setDataLoad(true))
             .catch(error => console.error('Error fetching data:', error));
   
-            // const onDateChange = (date) => {
-            //   setSelectedDate(date);
-            //   setSelectedTimelineDate(date);
-            // };
-            // const onTimelineDateChange = (date) => {
-            //   setSelectedTimelineDate(date);
-            //   console.log('Timeline DATE Changed')
-            // };
-          
-            // const handlePlayPause = () => {
-            //   setIsPlaying(!isPlaying);
-            //   console.log('KSFLSD')
-            //   if(!isPlaying){
-            //     setSelectedDate(selectedTimelineDate)
-            //   }
-            // };
-    
+
     let geoJsonLayer = null;
 
-   // console.log(grids[0].gridCenter)
   
     
     const mapContainer = document.getElementById('map');
@@ -489,11 +406,7 @@ const WeatherMap = () => {
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
-    // L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-    //     attribution: '© OpenStreetMap contributors',
-    //     zIndex: 2
-    //   }).addTo(map);
-
+ 
 
       info = L.control();
 
@@ -506,11 +419,7 @@ const WeatherMap = () => {
       }
 
       info.update = function (props){
-        // if(currentMetric === 'avg_temp'){
-        //     this._div.innerHTML = '<h4>Average Temperature </h4>' + (props ?
-        //         '<b>' + props.name + '</b><br />' + props.avg_temp + ' &deg;C' :
-        //         'Hover over a county');
-        // }
+
         this._div.innerHTML = '<h4>Location </h4>' + (props ?
           '<b>' + props.name + '</b><br />' :
           'Hover over a county');
@@ -518,42 +427,6 @@ const WeatherMap = () => {
       }
 
       info.addTo(map);
-
-
-      
-
-//     metricsLayer = L.geoJSON(turf.featureCollection(grids), {
-//       style: style,
-//       onEachFeature: onEachFeature,
-//   }).addTo(map);
-
-//   geoJsonLayer = L.geoJSON(FloridaCountiesData, {
-//     style: countyStyle,
-//     onEachFeature: onEachFeature,
-// }).addTo(map);
-
-//   map.on('click', function(e) {
-//     const clickedPoint = turf.point([e.latlng.lng, e.latlng.lat]);
-//     metricsLayer.eachLayer(layer => {
-//         if (turf.booleanPointInPolygon(clickedPoint, layer.feature)) {
-//             showPopup(e, layer);
-//         }
-//     });
-// });
-
-// if(currentMetric == 'wind'){
-//   grids.forEach(grid => {
-//     const icon = L.divIcon({
-//       html: '<div class="fas fa-arrow-right" style="transform: rotate(152deg);"></div>', // Your custom HTML for the icon
-//       iconSize: [25, 25], // Size of the icon
-//       iconAnchor: [12, 12], // Point of the icon which will correspond to marker's location
-//       className: 'custom-div-icon' // Custom class for additional styling
-//     });
-  
-//     L.marker([grid.gridCenter[1], grid.gridCenter[0]], {icon: icon})
-//       .addTo(map);
-//   });
-// }
 
 
 
@@ -608,16 +481,7 @@ const WeatherMap = () => {
       
     `;
 
-    //  // Create a div element to render the TemperatureRect component
-    //  const temperatureRectComponent = document.createElement('div');
-    
-    //  // Render the TemperatureRect component inside the div
-    //  ReactDOM.render(<TemperatureRect />, temperatureRectComponent);
-    
 
-     
-
-    //  container.appendChild(temperatureRectComponent);
   
           return container;
         }
@@ -652,29 +516,11 @@ const WeatherMap = () => {
         rootPrep.render(<PrecipitationRect />);
         rootWind.render(<WindRect />);
         rootWave.render(<WaveRect />);
-
-        // Render the TemperatureRect component inside the div
-        // ReactDOM.render(<TemperatureRect />, temperatureRectComponent);
-        // ReactDOM.render(<PrecipitationRect />, precipitationRectComponent);
-        // ReactDOM.render(<WindRect />, windRectComponent);
-        // ReactDOM.render(<WaveRect />, waveRectComponent);
         
         
         if(currentMetric === 'precipitation'){
           container.appendChild(precipitationRectComponent);
         }
-
-        // else if(currentMetric === 'avg_temp'){
-        //   container.appendChild(temperatureRectComponent);
-        //  // api_url = 'http://localhost:4000/api/climate/avg?time=2022-12-01 00:00:00';
-
-        // }
-
-        // else if(currentMetric === 'min_temp'){
-        //   container.appendChild(temperatureRectComponent);
-        //  // api_url = 'http://localhost:4000/api/climate/min-low?time=2022-12-01 00:00:00';
-
-        // }
 
         else if(currentMetric === 'wind'){
           container.appendChild(windRectComponent)
@@ -714,11 +560,6 @@ const WeatherMap = () => {
           onDateChange={onDateChange} mapView={mapView}/>) 
 
         
-        
-        // // Render the TemperatureRect component inside the div
-        // ReactDOM.render(<DatePickerComponent selectedDate={selectedDate} 
-        //   onDateChange={onDateChange} />, DateSelectorComponent);
-        
     
         container.appendChild(DateSelectorComponent);
         
@@ -749,10 +590,7 @@ const WeatherMap = () => {
         const root = createRoot(MapViewComponent)
 
         root.render(<MapView onMapViewChange={onMapViewChange} />)
-        
-        // // Render the TemperatureRect component inside the div
-        // ReactDOM.render(<DatePickerComponent selectedDate={selectedDate} 
-        //   onDateChange={onDateChange} />, DateSelectorComponent);
+
         
     
         container.appendChild(MapViewComponent);
@@ -766,141 +604,20 @@ const WeatherMap = () => {
       });
 
 
-      const TimelineDayRulerControl = L.Control.extend({
-      
-
-        options: {
-          position: 'bottomleft'
-        },
-
-        onAdd: function () {
-          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom timeline-day-ruler');
-          
-
-
-
-        // Create a div element to render the TemperatureRect component
-        const TimelineDayRulerComponent= document.createElement('div');
-        
-        
-        // Render the TemperatureRect component inside the div
-        ReactDOM.render(<TimelineDayRuler date={selectedDate} />, TimelineDayRulerComponent);
-        
-    
-        container.appendChild(TimelineDayRulerComponent);
-        
-        
-      
-        
-  
-          return container;
-        }
-      });
-
-      const TimelineYearRulerControl = L.Control.extend({
-      
-
-        options: {
-          position: 'bottomleft'
-        },
-
-        onAdd: function () {
-          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom timeline-day-ruler');
-          
-
-
-
-        // Create a div element to render the TemperatureRect component
-        const TimelineYearRulerComponent= document.createElement('div');
-        
-        
-        // Render the TemperatureRect component inside the div
-        ReactDOM.render(<TimelineYearRuler date={selectedDate} onDateChange={onDateChange}/>, TimelineYearRulerComponent);
-        
-    
-        container.appendChild(TimelineYearRulerComponent);
-        
-        
-      
-        
-  
-          return container;
-        }
-      });
-
-      const TimelineRulerControl = L.Control.extend({
-      
-
-        options: {
-          position: 'bottomleft'
-        },
-
-        onAdd: function () {
-          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom timeline-day-ruler');
-          
-
-
-
-        // Create a div element to render the TemperatureRect component
-        const TimelineRulerComponent= document.createElement('div');
-        
-        
-        // Render the TemperatureRect component inside the div
-        ReactDOM.render(<TimelineRuler date={selectedDate} timelineDate={selectedTimelineDate} onTimelineDateChange={onTimelineDateChange}/>, TimelineRulerComponent);
-        
-    
-        container.appendChild(TimelineRulerComponent);
-        
-        
-      
-        
-  
-          return container;
-        }
-      });
-
-      const AutoDateControl = L.Control.extend({
-        options: {
-            position: 'topleft' // You can adjust the position as needed
-        },
-    
-        onAdd: function() {
-            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-            
-            // Create a div element to render the AutoAdvanceDate component
-            const autoDateComponent = document.createElement('div');
-    
-            // Render the AutoAdvanceDate component inside the div
-            ReactDOM.render(<AutoDateComponent selectedDate={selectedDate} onDateChange={onDateChange} />, autoDateComponent );
-    
-            container.appendChild(autoDateComponent );
-    
-            return container;
-        }
-    });
-
 
   
      map.addControl(new customControl());
-     //map.addControl(new MapViewSelector())
 
      map.addControl(new DateSelector());
      
-     
-     
-    //map.addControl(new TimelineYearRulerControl());
-    //  map.addControl(new AutoDateControl());
      map.addControl(new tempMeter());
-    //  map.addControl(new DateSelector());
 
      
   
       // Expose function to window object so it can be accessed by inline onclick handlers
       window.switchMetric = (newMetric) => {
         setCurrentMetric(newMetric);
-        // geoJsonLayer.eachLayer((layer) => {
-        //   layer.setStyle(style(layer.feature));
-        // });
+             
       };
 
     
@@ -916,19 +633,12 @@ const WeatherMap = () => {
 
 
 
-//   coordinatesToBeQueried.forEach(coordPair => {
-//     console.log(coordPair.join(','));
-// });
-
 
 
 
 
   return (
    
-    // <div id="test" style={{ height: '100%', width: '100%', position: 'relative' }}>
-    //   <div id="map" style={{ height: '85%', width: '100%', position: 'relative' }}> </div>
-    //     <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />
 
 
     // </div>
@@ -936,9 +646,9 @@ const WeatherMap = () => {
               <MapView  onMapViewChange={onMapViewChange} style={{ height: '3%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: '#416892b0' }} />
               <div id="map" style={{ height: `${height}%`, width: '100%', position: 'relative' }}> </div>
               {/* <TimelineRuler date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
-              { <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
-              {/* <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
-              {/* <TimelineDayRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
+              { mapView === 'date' && <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
+              { mapView === 'average' && <TimelineAverageRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
+
 
 
 

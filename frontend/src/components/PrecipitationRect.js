@@ -19,7 +19,7 @@ const PrecipitationRect = () => {
           <span className="value-prep">0.02 in</span>
         </div>
         <div className="color prep6">
-          <span className="value-prep">0.015 in</span>
+          <span className="value-prep">0.01 in</span>
         </div>
         <div className="color prep7">
           <span className="value-prep">0 in</span>  
