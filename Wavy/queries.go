@@ -124,7 +124,9 @@ const QueryAvgTemperaturesAverage = `
         longitude AS Long,
         ROUND(AVG(t2m_mean),1) AS t2m_mean
     FROM 
-        era5_averages
+        era5_averaged
+    WHERE
+        month = $1 AND day = $2
     GROUP BY 
         latitude, longitude;
 `
@@ -135,7 +137,9 @@ const QueryMaxHighClimateDataAverage = `
         longitude AS Long,
         ROUND(MAX(t2m_max),1) AS Max_Daily_High
     FROM 
-        era5_averages
+        era5_averaged
+    WHERE
+        month = $1 AND day = $2
     GROUP BY 
         latitude, longitude;
 `
@@ -146,31 +150,36 @@ const QueryMinLowClimateDataAverage = `
         longitude AS Long,
         ROUND(MIN(t2m_min),1) AS Min_Daily_Low
     FROM 
-        era5_averages
+        era5_averaged
+    WHERE
+        month = $1 AND day = $2
     GROUP BY 
         latitude, longitude;
 `
 
 const QueryPrecipitationDataAverage = `
-    SELECT 
-        time,
-        latitude AS Lat,
-        longitude AS Long,
-        MAX(tp_eod) AS TpEod
-    FROM 
-        era5_averages
-    GROUP BY
-        time, latitude, longitude;
+SELECT 
+    latitude AS Lat,
+    longitude AS Long,
+    MAX(tp_sum) AS TpEod
+FROM 
+    era5_averaged
+WHERE
+    month = $1 AND day = $2
+GROUP BY
+     latitude, longitude;
 `
 
 const QueryWindSpeedGroupedByLocationAverage = `
-    SELECT 
-        latitude AS Lat,
-        longitude as Long,
-        ROUND(AVG(v10_mean),1) AS WindDirectionMean,
-        ROUND(AVG(u10_mean),1) AS WindSpeedMean
-    FROM 
-        era5_averages
-    GROUP BY
-        time, latitude, longitude;
+SELECT 
+    latitude AS Lat,
+    longitude AS Long,
+    ROUND(AVG(wind_direction_mean), 1) AS WindDirectionMean,
+    ROUND(AVG(wind_speed_mean), 1) AS WindSpeedMean
+FROM 
+    era5_averaged
+WHERE
+    month = $1 AND day = $2
+GROUP BY
+    latitude, longitude;
 `
