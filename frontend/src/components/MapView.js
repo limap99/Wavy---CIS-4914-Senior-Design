@@ -36,7 +36,7 @@ const MapView = ({onMapViewChange}) => {
                 className={`average-button ${activeButton === 'average' ? 'active-view' : ''}`}
                 onClick={() => toggleButton('average')}
             >
-                40 Year Average
+                Long-Term Average
             </button>
             {/* {activeButton === 'date' ? <TemperatureRect /> : <PrecipitationRect />} */}
         </div>
