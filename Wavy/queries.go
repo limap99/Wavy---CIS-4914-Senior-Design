@@ -172,7 +172,6 @@ GROUP BY
      latitude, longitude;
 `
 
-
 const QueryWindSpeedGroupedByLocationAverage = `
 SELECT 
     latitude AS Lat,
@@ -186,4 +185,17 @@ WHERE
 GROUP BY
     latitude, longitude;
 `
+const QueryMeanCloudCoverAverage  = `
+    SELECT 
+        latitude AS Lat,
+        longitude AS Long,
+        ROUND(AVG(tcc_mean),1) AS Total_Cloud_Cover
+    FROM 
+        era5_averaged
+	WHERE
+		month = $1 and day =$2
+    GROUP BY 
+        latitude, longitude;
+`
+
 
