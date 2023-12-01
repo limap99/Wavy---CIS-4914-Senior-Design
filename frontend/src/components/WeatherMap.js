@@ -452,7 +452,8 @@ const WeatherMap = () => {
 
 
 
-  
+      
+          
         container.innerHTML = `
       <div class="map-icon" style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer;" onclick="window.switchMetric('avg_temp')">
         <i class="fas fa-thermometer-half" style="font-size: 24px; color: #FFA500"></i>
