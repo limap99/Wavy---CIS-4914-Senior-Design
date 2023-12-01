@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import L, { rectangle } from 'leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FloridaCountiesData } from '../data/FloridaCountiesData';
 import * as turf from '@turf/turf';
-import { grids, coordinatesToBeQueried } from '../data/gridData';
+import { grids} from '../data/gridData';
 import TemperatureRect from './TemperatureRect';
 import WindRect from './WindRect';
 import WaveRect from './WaveRect';
-import ReactDOM from 'react-dom';
 import PrecipitationRect from './PrecipitationRect';
 import { format } from 'date-fns';
-import AutoDateComponent from './AutoDateComponent';
 import TimelineAverageRuler from './TimelineAverageRuler';
 import TimelineYearRuler from './TimelineYearRuler';
 import MapView from './MapView';
@@ -27,7 +25,7 @@ const WeatherMap = () => {
 
   
     const [currentMetric, setCurrentMetric] = useState('avg_temp');
-    const [selectedDate, setSelectedDate] = useState(new Date(2022, 0, 1));
+    const [selectedDate, setSelectedDate] = useState(new Date(1980, 0, 1));
     const [isPlaying, setIsPlaying] = useState(false);
     const [selectedTimelineDate, setSelectedTimelineDate] = useState(new Date(2022, 0, 1))
     const [mapView, setMapView] = useState('date');
@@ -94,7 +92,14 @@ const WeatherMap = () => {
         }
         return apiUrl
       case 'clouds':
-          return `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00`;
+        if(mapView === 'date'){
+          apiUrl = `http://localhost:${port}/api/climate/cloudcover?time=${date} 00:00:00`;
+        }
+        else if (mapView === 'average'){
+          apiUrl = `http://localhost:${port}/api/climate/cloudcover-40-avg?month=${date.slice(5,7)}&day=${date.slice(8, 10)}`
+
+        }
+        return apiUrl
       default:
         return `http://localhost:${port}/api/climate/precipitation?time=${date}00:00:00`;
     }
@@ -108,7 +113,7 @@ const WeatherMap = () => {
   const onMapViewChange = (mapView) => {
     setMapView(mapView)
     if(mapView === 'average'){
-      setSelectedDate(new Date(2020, 0, 1))
+      setSelectedDate(new Date(1980, 0, 1))
     }
     else{
       setSelectedDate(new Date(2022, 0, 1))
@@ -125,13 +130,13 @@ const WeatherMap = () => {
     const getColor = (value) => {
         if (currentMetric === 'precipitation') {
           // ... add logic for precipitation colors
-          return value > 0.2 ? '#0033CC' : // Very Wet
-          value > 0.1 ? '#3366FF' : // Wet
-          value > 0.07? '#6699FF' : // Moderate
-          value > 0.03  ? '#99CCFF' :
-          value > 0.02  ? '#CCE5FF' :
-          value > 0.01  ? '#E5F2FF' :
-                     '#F0F8FF'; // Dry
+          return value > 0.2 ? '#034e7b' : // Very Wet
+          value > 0.1 ? '#0570b0' : // Wet
+          value > 0.07? '#3690c0' : // Moderate
+          value > 0.03  ? '#74a9cf' :
+          value > 0.02  ? '#a6bddb' :
+          value > 0.01  ? '#d0d1e6' :
+                     '#f1eef6'; // Dry
         }
         else if (currentMetric === 'wind') {
           return value > 40 ? '#810f7c' : 
@@ -145,14 +150,14 @@ const WeatherMap = () => {
         }
 
         else if (currentMetric === 'clouds') {
-          return value > 90 ? '#f6eff7' : 
-          value > 70 ? '#d0d1e6' : 
-          value > 50 ? '#a6bddb' : 
-          value > 30  ? '#67a9cf' :
-          value > 20  ? '#1c9099' :
+          return value > 90 ? '#13aeba' : 
+          value > 70 ? '#4ba3d6' : 
+          value > 50 ? '#67a9cf' : 
+          value > 30  ? '#a6bddb' :
+          value > 20  ? '#d0d1e6' :
           // value > 15  ? '#bfd3e6' :
           // value > 10  ? '#e0ecf4' :
-                     '#016c59'; 
+                     '#f6eff7'; 
         }
 
         else {
@@ -171,9 +176,9 @@ const WeatherMap = () => {
     const style = (feature) => {
         return {
         fillColor: getColor(feature.properties[currentMetric]),
-        //fillColor: 'red',
+        // fillColor: 'red',
         weight: 0,
-        //weight: 2,
+        // weight: 2,
         opacity: 1,
         color: '#667',  // This should hide any remaining border
         dashArray: '3',
@@ -184,7 +189,7 @@ const WeatherMap = () => {
     const countyStyle = (feature) => {
         return {
         // fillColor: getColor(feature.properties[currentMetric]),
-        fillColor: '',
+        // fillColor: 'red',
         //weight: 0,
         weight: 2,
         opacity: 1,
@@ -297,6 +302,8 @@ const WeatherMap = () => {
       formattedDate = format(selectedDate, 'yyyy-MM-dd')
     }
 
+  
+
     
 
 
@@ -335,6 +342,8 @@ const WeatherMap = () => {
                   }        
                 }
               }
+
+              
  
              
               metricsLayer = L.geoJSON(turf.featureCollection(grids), {
@@ -399,13 +408,17 @@ const WeatherMap = () => {
       map = L.map('map', {
         attributionControl: false,
         minZoom: 7,
-        maxBounds: bounds,  // Limit the pannable area
+        // maxBounds: bounds,  // Limit the pannable area
         maxBoundsViscosity: 0.75
       }).setView([27.5, -82], 7);
 
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
+      // L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      //   attribution: '© OpenStreetMap contributors',
+      //   zIndex: 2
+      // }).addTo(map);
  
 
       info = L.control();
@@ -621,10 +634,9 @@ const WeatherMap = () => {
              
       };
 
-    
+     
 
-      
-
+  
     return () => {
       if (map) {
         map.remove();
@@ -646,9 +658,11 @@ const WeatherMap = () => {
       <div style={{ height: '100%', width: '100%', position: 'relative' }}>
               <MapView  onMapViewChange={onMapViewChange} style={{ height: '3%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: '#416892b0' }} />
               <div id="map" style={{ height: `${height}%`, width: '100%', position: 'relative' }}> </div>
+              {/* <div id="map" style={{ height: `100%`, width: '100%', position: 'relative' }}> </div>
+
               {/* <TimelineRuler date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} /> */}
               { mapView === 'date' && <TimelineYearRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
-              { mapView === 'average' && <TimelineAverageRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />}
+              { mapView === 'average' && <TimelineAverageRuler  date={selectedDate} onDateChange={onDateChange} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000 }} />} 
 
 
 
