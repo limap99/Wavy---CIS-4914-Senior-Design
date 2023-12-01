@@ -652,6 +652,40 @@ func getPrecipitationDataAverage(c *gin.Context) {
 	c.JSON(http.StatusOK, precipitationDataSlice)
 }
 
+func getMeanCloudCoverDataAveraged(c *gin.Context) {
+	month, day := c.Query("month"), c.Query("day")
+	if month == "" || day == "" {
+		respondWithError(c, http.StatusBadRequest, "Month and day parameters are required.", nil)
+		return
+	}
+
+	query := QueryMeanCloudCoverAverage
+	rows, err := db.Query(query, month, day)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+		return
+	}
+	defer rows.Close()
+
+	var results []TotalCloudCoverData
+	for rows.Next() {
+		var data TotalCloudCoverData
+		err := rows.Scan(&data.Lat, &data.Long, &data.Mean_Total_Cloud_Cover)
+		if err != nil {
+			respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+			return
+		}
+		results = append(results, data)
+	}
+	if err = rows.Err(); err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error iterating over the results", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, results)
+
+}
+
 func getWindSpeedGroupedByLocationAverage(c *gin.Context) {
 	// Extract the 'month' and 'day' query parameters
 	month, day := c.Query("month"), c.Query("day")
@@ -744,6 +778,7 @@ func main() {
 	router.GET("/api/climate/min-low-40-avg", getMinLowClimateDataAverage)
 	router.GET("/api/climate/precipitation-40-avg", getPrecipitationDataAverage)
 	router.GET("/api/climate/windspeed-40-avg", getWindSpeedGroupedByLocationAverage)
+	router.GET("/api/climate/cloudcover-40-avg", getMeanCloudCoverDataAveraged)
 
 	router.Run(":4001")
 }
