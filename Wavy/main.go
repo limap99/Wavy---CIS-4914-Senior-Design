@@ -711,6 +711,103 @@ func getAllCoordinates(c *gin.Context) {
 	c.JSON(http.StatusOK, allCoordinates)
 }
 
+func getClimateDataByCoordinatesAndDate(c *gin.Context) {
+    // Extract the 'date', 'lat', and 'long' query parameters
+    dateStr := c.Query("date") // expecting "YYYY-MM-DD" format
+    latStr := c.Query("lat")
+    longStr := c.Query("long")
+
+    if dateStr == "" || latStr == "" || longStr == "" {
+        respondWithError(c, http.StatusBadRequest, "Date, latitude, and longitude parameters are required.", nil)
+        return
+    }
+
+    // Parse the date string
+    parsedDate, err := time.Parse("2006-01-02", dateStr)
+    if err != nil {
+        respondWithError(c, http.StatusBadRequest, "Invalid date format. Please use YYYY-MM-DD.", err)
+        return
+    }
+
+    // Calculate the start of the next day to cover the whole day
+    nextDay := parsedDate.Add(24 * time.Hour)
+
+    // Prepare and execute the SQL query
+    query := `SELECT time, latitude, longitude, mwd_mean, mwp_mean, sst_mean, swh_mean, 
+             d2m_min, d2m_mean, d2m_max, t2m_min, t2m_mean, t2m_max, tcc_min, tcc_mean, 
+             tcc_max, wind_speed_mean, wind_direction_mean 
+             FROM era5_refined WHERE latitude = $1 AND longitude = $2 AND 
+             time >= $3 AND time < $4;`
+    rows, err := db.Query(query, latStr, longStr, parsedDate, nextDay)
+    if err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error querying the database", err)
+        return
+    }
+	
+    defer rows.Close()
+
+    // Slice to hold the results
+    var results []Era5Data
+
+    // Iterate over the rows
+    for rows.Next() {
+        var data Era5Data
+        err := rows.Scan(&data.Time, &data.Latitude, &data.Longitude, &data.MwdMean, &data.MwpMean, &data.SstMean, &data.SwhMean, 
+                         &data.D2mMin, &data.D2mMean, &data.D2mMax, &data.T2mMin, &data.T2mMean, &data.T2mMax, &data.TccMin, &data.TccMean, 
+                         &data.TccMax, &data.WindSpeedMean, &data.WindDirectionMean)
+        if err != nil {
+            respondWithError(c, http.StatusInternalServerError, "Error scanning the rows", err)
+            return
+        }
+        results = append(results, data)
+    }
+
+    // Check for errors from iterating over rows
+    if err = rows.Err(); err != nil {
+        respondWithError(c, http.StatusInternalServerError, "Error iterating over the results", err)
+        return
+    }
+
+    // Send the results back as JSON
+    c.JSON(http.StatusOK, results)
+}
+
+func printClimateDataForDateLatLong(dateStr, latStr, longStr string) {
+    log.Println("Executing printClimateDataForDateLatLong with parameters:", dateStr, latStr, longStr)
+
+    query := `
+        SELECT time, latitude, longitude, mwd_mean, mwp_mean, sst_mean, swh_mean,
+               d2m_min, d2m_mean, d2m_max, t2m_min, t2m_mean, t2m_max, 
+               tcc_min, tcc_mean, tcc_max, wind_speed_mean, wind_direction_mean
+        FROM era5_refined 
+        WHERE date(time) = $1 AND latitude = $2 AND longitude = $3;
+    `
+
+    rows, err := db.Query(query, dateStr, latStr, longStr)
+    if err != nil {
+        log.Fatalf("Error querying the database: %v", err)
+        return
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var data Era5Data
+        if err := rows.Scan(&data.Time, &data.Latitude, &data.Longitude, 
+                            &data.MwdMean, &data.MwpMean, &data.SstMean, &data.SwhMean, 
+                            &data.D2mMin, &data.D2mMean, &data.D2mMax, &data.T2mMin, 
+                            &data.T2mMean, &data.T2mMax, &data.TccMin, &data.TccMean, 
+                            &data.TccMax, &data.WindSpeedMean, &data.WindDirectionMean); err != nil {
+            log.Fatalf("Error scanning the rows: %v", err)
+            return
+        }
+        fmt.Printf("%+v\n", data)
+    }
+
+    if err = rows.Err(); err != nil {
+        log.Fatalf("Error iterating over the results: %v", err)
+    }
+}
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
