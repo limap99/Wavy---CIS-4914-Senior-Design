@@ -195,3 +195,13 @@ const QueryMeanCloudCoverAverage = `
     GROUP BY 
         latitude, longitude;
 `
+
+const QueryClimateDataTimes = `
+    SELECT DISTINCT time
+    FROM era5_refined
+    WHERE 
+        time::date = $1 AND  // Cast time to date for comparison
+        longitude = $2 AND 
+        latitude = $3;
+`
+
