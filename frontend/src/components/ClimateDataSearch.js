@@ -32,19 +32,20 @@ const ClimateDataTable = () => {
             setLoading(false);
         }
     };
-    
-    
-    
-    
 
     const handleSubmit = (event) => {
         event.preventDefault();
         fetchData();
     };
 
-    const parseClimateValue = (value) => {
+    const parseClimateValue = (value, dataType) => {
         if (value && value.Valid) {
-            return value.Float64.toFixed(2); // Round to two decimal places
+            let floatValue = value.Float64;
+            // Check if the data type is one of the cloud cover fields
+            if (dataType === 'tcc_min' || dataType === 'tcc_mean' || dataType === 'tcc_max') {
+                floatValue *= 100; // Multiply by 100 for cloud cover values
+            }
+            return floatValue.toFixed(2); // Round to two decimal places
         }
         return 'N/A';
     };
@@ -157,10 +158,17 @@ const ClimateDataTable = () => {
     return (
         <div style={containerStyle}>
             <form onSubmit={handleSubmit} style={formStyle}>
-                <div style={inputGroupStyle}>
-                    <label style={labelStyle}>Date:</label>
-                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
-                </div>
+            <div style={inputGroupStyle}>
+                <label style={labelStyle}>Date:</label>
+                <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                min="2006-01-01"
+                max="2022-12-31"
+                style={inputStyle}
+                />
+            </div>
                 <div style={inputGroupStyle}>
                     <label style={labelStyle}>Latitude:</label>
                     <input type="number" value={latitude} onChange={(e) => setLatitude(e.target.value)} style={inputStyle} />
@@ -191,9 +199,9 @@ const ClimateDataTable = () => {
                         <th style={thStyle}>Temperature Min (°F)</th>
                         <th style={thStyle}>Temperature Mean (°F)</th>
                         <th style={thStyle}>Temperature Max (°F)</th>
-                        <th style={thStyle}>Total Cloud Cover Min</th>
-                        <th style={thStyle}>Total Cloud Cover Mean</th>
-                        <th style={thStyle}>Total Cloud Cover Max</th>
+                        <th style={thStyle}>Total Cloud Cover Min (%)</th>
+                        <th style={thStyle}>Total Cloud Cover Mean (%)</th>
+                        <th style={thStyle}>Total Cloud Cover Max (%)</th>
                         <th style={thStyle}>Wind Speed Mean (mph)</th>
                     </tr>
                 </thead>
@@ -210,9 +218,9 @@ const ClimateDataTable = () => {
                             <td style={tdStyle}>{parseClimateValue(data.t2m_min)}</td>
                             <td style={tdStyle}>{parseClimateValue(data.t2m_mean)}</td>
                             <td style={tdStyle}>{parseClimateValue(data.t2m_max)}</td>
-                            <td style={tdStyle}>{parseClimateValue(data.tcc_min)}</td>
-                            <td style={tdStyle}>{parseClimateValue(data.tcc_mean)}</td>
-                            <td style={tdStyle}>{parseClimateValue(data.tcc_max)}</td>
+                            <td style={tdStyle}>{parseClimateValue(data.tcc_min, 'tcc_min')}</td>
+                            <td style={tdStyle}>{parseClimateValue(data.tcc_mean, 'tcc_mean')}</td>
+                            <td style={tdStyle}>{parseClimateValue(data.tcc_max, 'tcc_max')}</td>
                             <td style={tdStyle}>{parseClimateValue(data.wind_speed_mean)}</td>
                         </tr>
                     ))}
