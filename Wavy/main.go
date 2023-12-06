@@ -745,5 +745,7 @@ func main() {
 	router.GET("/api/climate/precipitation-40-avg", getPrecipitationDataAverage)
 	router.GET("/api/climate/windspeed-40-avg", getWindSpeedGroupedByLocationAverage)
 
+	router.GET("/api/climate/data-by-coordinates-date", getClimateDataByCoordinatesAndDate)
+
 	router.Run(":4001")
 }
